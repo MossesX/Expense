@@ -31,6 +31,8 @@ export interface ExpensesUiState {
   readonly payday: boolean;
   readonly importing: boolean;
   readonly scanning: boolean;
+  /** The Actions › Dupe dialog — possible duplicates inside the ledger. */
+  readonly dupes: boolean;
   readonly settings: boolean;
   readonly deleting: boolean;
   readonly filterDialog: boolean;
@@ -46,6 +48,7 @@ const INITIAL: ExpensesUiState = {
   payday: false,
   importing: false,
   scanning: false,
+  dupes: false,
   settings: false,
   deleting: false,
   filterDialog: false,
@@ -108,6 +111,14 @@ class UiStore {
 
   closeScan(): void {
     if (this.#state.scanning) this.#set({ scanning: false });
+  }
+
+  openDupes(): void {
+    if (!this.#state.dupes) this.#set({ dupes: true });
+  }
+
+  closeDupes(): void {
+    if (this.#state.dupes) this.#set({ dupes: false });
   }
 
   openSettings(): void {
