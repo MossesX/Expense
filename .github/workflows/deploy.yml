@@ -1,0 +1,43 @@
+name: Deploy to VPS
+
+# Every push to main (from Claude or anyone) redeploys expenses.amberxai.com.
+# The build runs ON the VPS: this job only opens an SSH
+# session with a key that is restricted (authorized_keys forced command) to
+# `ping` and `deploy <name>`; the server-side script is ~/hub/deploy/expense.sh.
+#
+# Repository secret needed: VPS_SSH_KEY (private half of the VPS's
+# ~/.ssh/github-deploy key). The host key below is pinned, so no TOFU.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-expense
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      VPS_HOST: 31.97.13.252
+    steps:
+      - name: Prepare SSH
+        env:
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+        run: |
+          if [ -z "$VPS_SSH_KEY" ]; then echo "::error::Repository secret VPS_SSH_KEY is not set."; exit 1; fi
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/deploy_key && chmod 600 ~/.ssh/deploy_key
+          echo "$VPS_HOST ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMe6+tPy/DD5dlH1/Ac8k9spEnqOpXhb5S2jADyaM9hX" > ~/.ssh/known_hosts
+          ssh -i ~/.ssh/deploy_key -o BatchMode=yes root@"$VPS_HOST" ping
+      - name: Deploy on the VPS
+        run: ssh -i ~/.ssh/deploy_key -o BatchMode=yes -o ServerAliveInterval=30 root@"$VPS_HOST" deploy expense
+      - name: Verify the sites answer
+        run: |
+          for h in expenses.amberxai.com; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "https://$h/login" || true)
+            echo "https://$h/login -> $code"; [ "$code" = 200 ] || exit 1
+          done
