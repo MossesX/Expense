@@ -39,15 +39,15 @@ interface SecretDoc {
 async function readSecrets(user: string): Promise<SecretDoc> {
   const doc = (await axfKv.read(user, AI_SECRET_NS)) as SecretDoc | null;
   return {
-    subscriptionToken: typeof doc?.subscriptionToken === "string" ? doc.subscriptionToken.trim() : "",
-    apiKey: typeof doc?.apiKey === "string" ? doc.apiKey.trim() : ""
+    subscriptionToken: typeof doc?.subscriptionToken === "string" ? cleanSecret(doc.subscriptionToken) : "",
+    apiKey: typeof doc?.apiKey === "string" ? cleanSecret(doc.apiKey) : ""
   };
 }
 
 export async function getCredentials(user: string): Promise<Credentials> {
   const saved = await readSecrets(user);
-  const envSub = process.env.CLAUDE_CODE_OAUTH_TOKEN?.trim() ?? "";
-  const envKey = process.env.ANTHROPIC_API_KEY?.trim() ?? "";
+  const envSub = cleanSecret(process.env.CLAUDE_CODE_OAUTH_TOKEN ?? "");
+  const envKey = cleanSecret(process.env.ANTHROPIC_API_KEY ?? "");
   return {
     subscriptionToken: saved.subscriptionToken || envSub,
     apiKey: saved.apiKey || envKey,

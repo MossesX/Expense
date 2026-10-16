@@ -122,7 +122,7 @@ export default function AiSettingsPanel() {
     try {
       const r = await call<View & { subscription?: { ok: boolean; detail: string }; api?: { ok: boolean; detail: string } }>("/api/ai/settings/test", { method: "POST", body: JSON.stringify({ which }) });
       setView(r);
-      const bits = [r.subscription && `Subscription: ${r.subscription.ok ? "connected" : "failed"}`, r.api && `API: ${r.api.ok ? "connected" : "failed"}`].filter(Boolean);
+      const bits = [r.subscription && `Subscription: ${r.subscription.ok ? "connected" : `failed — ${r.subscription.detail}`}`, r.api && `API: ${r.api.ok ? "connected" : `failed — ${r.api.detail}`}`].filter(Boolean);
       setNote({ tone: (r.subscription?.ok ?? true) && (r.api?.ok ?? true) ? "success" : "error", text: bits.join(" · ") });
     } catch (e) {
       setNote({ tone: "error", text: (e as Error).message });
