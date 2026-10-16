@@ -57,6 +57,7 @@ import { Glyph, token } from "@axf/core";
 
 import { KindChip, MONO, MoneyCell, PaymentCell, SourceChip, StatTile, TextCell, autoDashIso, capitalizeWords } from "./bits";
 import { CARDS, useHiddenCards, type CardId } from "./cards";
+import { hiddenSet } from "./columns";
 import { expenseSelection, useExpenseSelection } from "./selection";
 import { useExpensesSettings } from "./settings";
 import { CATEGORIES, INCOME_CATEGORY, isIncome, type Expense, type LineItem } from "./types";
@@ -343,6 +344,13 @@ export function GridView({
 
   const cell = { py: prefs.denseRows ? 0 : 0.3, borderColor: token("edge") } as const;
 
+  // Hidden columns (View menu / Settings › Grid). `show(id)` guards both the
+  // header cell and the body cell of a column, so the two can never disagree;
+  // the four fixed columns (tick, chevron, date, merchant) are not in the list.
+  const hidden = React.useMemo(() => hiddenSet(prefs.hiddenColumns), [prefs.hiddenColumns]);
+  const col = (id: string) => !hidden.has(id);
+  const span = 17 - hidden.size;
+
   /** Display order — what a shift-click range is taken along. */
   const order = React.useMemo(() => sorted.map((r) => r.id), [sorted]);
   const selectedHere = order.filter((id) => selected.has(id)).length;
@@ -467,20 +475,20 @@ export function GridView({
               </TableCell>
               <TableCell sx={{ width: 30, py: 0.4 }} />
               {header("date", "Date")}
-              {header("kind", "Kind", "Expense (money out) or income (money in). Click a chip to flip it.")}
+              {col("kind") && header("kind", "Kind", "Expense (money out) or income (money in). Click a chip to flip it.")}
               {header("merchant", "Merchant")}
-              {header("category", "Category")}
-              {header("payment", "Account")}
-              <TableCell sx={{ py: 0.4, fontSize: 11, color: token("dim"), textTransform: "uppercase" }}>Lines</TableCell>
-              {header("subtotal", "Subtotal")}
-              {header("tax", "Tax")}
-              <TableCell sx={{ py: 0.4, fontSize: 11, color: token("dim"), textTransform: "uppercase" }}>Tip</TableCell>
-              {header("stated", "Printed", "The total printed on the receipt. Blank means trust the computed figure.")}
-              {header("recon", "Δ", "Printed total minus the sum of the lines. Reported, never auto-corrected.")}
-              {header("total", "Total")}
-              {header("balance", "Balance", "Running net balance — income minus spending, cumulative in date order, correct under any display sort.")}
-              <TableCell sx={{ py: 0.4, fontSize: 11, color: token("dim"), textTransform: "uppercase" }}>Source</TableCell>
-              <TableCell sx={{ py: 0.4, fontSize: 11, color: token("dim"), textTransform: "uppercase" }}>Notes</TableCell>
+              {col("category") && header("category", "Category")}
+              {col("account") && header("payment", "Account")}
+              {col("lines") && <TableCell sx={{ py: 0.4, fontSize: 11, color: token("dim"), textTransform: "uppercase" }}>Lines</TableCell>}
+              {col("subtotal") && header("subtotal", "Subtotal")}
+              {col("tax") && header("tax", "Tax")}
+              {col("tip") && <TableCell sx={{ py: 0.4, fontSize: 11, color: token("dim"), textTransform: "uppercase" }}>Tip</TableCell>}
+              {col("printed") && header("stated", "Printed", "The total printed on the receipt. Blank means trust the computed figure.")}
+              {col("delta") && header("recon", "Δ", "Printed total minus the sum of the lines. Reported, never auto-corrected.")}
+              {col("total") && header("total", "Total")}
+              {col("balance") && header("balance", "Balance", "Running net balance — income minus spending, cumulative in date order, correct under any display sort.")}
+              {col("source") && <TableCell sx={{ py: 0.4, fontSize: 11, color: token("dim"), textTransform: "uppercase" }}>Source</TableCell>}
+              {col("notes") && <TableCell sx={{ py: 0.4, fontSize: 11, color: token("dim"), textTransform: "uppercase" }}>Notes</TableCell>}
             </TableRow>
           </TableHead>
           <TableBody>
@@ -546,13 +554,13 @@ export function GridView({
                     <TableCell sx={cell}>
                       <TextCell value={r.date} onCommit={(v) => onUpdate(r.id, { date: autoDashIso(v) || v })} width={100} />
                     </TableCell>
-                    <TableCell sx={cell}>
+                    {col("kind") && <TableCell sx={cell}>
                       <KindChip kind={income ? "income" : "expense"} onToggle={() => toggleKind(r)} />
-                    </TableCell>
+                    </TableCell>}
                     <TableCell sx={cell}>
                       <TextCell value={r.merchant} onCommit={(v) => onUpdate(r.id, { merchant: capitalizeWords(v) })} width={170} />
                     </TableCell>
-                    <TableCell sx={cell}>
+                    {col("category") && <TableCell sx={cell}>
                       <TextField
                         select
                         size="small"
@@ -568,30 +576,30 @@ export function GridView({
                           </MenuItem>
                         ))}
                       </TextField>
-                    </TableCell>
-                    <TableCell sx={cell}>
+                    </TableCell>}
+                    {col("account") && <TableCell sx={cell}>
                       <PaymentCell value={r.paymentMethod ?? ""} onCommit={(v) => onUpdate(r.id, { paymentMethod: v || undefined })} />
-                    </TableCell>
-                    <TableCell sx={cell}>
+                    </TableCell>}
+                    {col("lines") && <TableCell sx={cell}>
                       <Typography sx={{ fontSize: 11.5, color: token("dim") }}>{r.items.length}</Typography>
-                    </TableCell>
-                    <TableCell sx={cell}>
+                    </TableCell>}
+                    {col("subtotal") && <TableCell sx={cell}>
                       <Typography sx={{ ...MONO, fontSize: 11.8, color: token("dim") }}>{money(subtotal(r))}</Typography>
-                    </TableCell>
-                    <TableCell sx={cell}>
+                    </TableCell>}
+                    {col("tax") && <TableCell sx={cell}>
                       <Tooltip title={`${taxRate(r).toFixed(2)}% of subtotal`}>
                         <Box>
                           <MoneyCell value={r.tax} onCommit={(c) => onUpdate(r.id, { tax: c ?? 0 })} />
                         </Box>
                       </Tooltip>
-                    </TableCell>
-                    <TableCell sx={cell}>
+                    </TableCell>}
+                    {col("tip") && <TableCell sx={cell}>
                       <MoneyCell value={r.tip} onCommit={(c) => onUpdate(r.id, { tip: c ?? 0 })} />
-                    </TableCell>
-                    <TableCell sx={cell}>
+                    </TableCell>}
+                    {col("printed") && <TableCell sx={cell}>
                       <MoneyCell value={r.statedTotal} onCommit={(c) => onUpdate(r.id, { statedTotal: c })} allowNull />
-                    </TableCell>
-                    <TableCell sx={cell}>
+                    </TableCell>}
+                    {col("delta") && <TableCell sx={cell}>
                       {rec.stated === null ? (
                         <Typography sx={{ fontSize: 11, color: token("dim") }}>—</Typography>
                       ) : rec.ok ? (
@@ -604,28 +612,28 @@ export function GridView({
                           </Typography>
                         </Tooltip>
                       )}
-                    </TableCell>
-                    <TableCell sx={cell}>
+                    </TableCell>}
+                    {col("total") && <TableCell sx={cell}>
                       <Typography sx={{ ...MONO, fontSize: 12.2, fontWeight: 600, color: income ? token("ok") : undefined }}>
                         {income ? "+" : ""}
                         {money(effectiveTotal(r))}
                       </Typography>
-                    </TableCell>
-                    <TableCell sx={cell}>
+                    </TableCell>}
+                    {col("balance") && <TableCell sx={cell}>
                       <Typography sx={{ ...MONO, fontSize: 11.8, color: balance < 0 ? token("dim") : token("ok") }}>
                         {money(balance)}
                       </Typography>
-                    </TableCell>
-                    <TableCell sx={cell}>
+                    </TableCell>}
+                    {col("source") && <TableCell sx={cell}>
                       <SourceChip source={r.source} />
-                    </TableCell>
-                    <TableCell sx={cell}>
+                    </TableCell>}
+                    {col("notes") && <TableCell sx={cell}>
                       <TextCell value={r.note ?? ""} onCommit={(v) => onUpdate(r.id, { note: v || undefined })} width={210} />
-                    </TableCell>
+                    </TableCell>}
                   </TableRow>
                   {open && (
                     <TableRow data-axf-area="expenses.expense" data-axf-expense={r.id} data-axf-merchant={r.merchant}>
-                      <TableCell colSpan={17} sx={{ py: 0, borderColor: token("edge"), background: token("panel") }}>
+                      <TableCell colSpan={span} sx={{ py: 0, borderColor: token("edge"), background: token("panel") }}>
                         <LineItems
                           expense={r}
                           onChange={(items) => onUpdate(r.id, { items })}
@@ -639,7 +647,7 @@ export function GridView({
             })}
             {!sorted.length && (
               <TableRow>
-                <TableCell colSpan={17} sx={{ py: 2, textAlign: "center", color: token("dim"), fontSize: 12 }}>
+                <TableCell colSpan={span} sx={{ py: 2, textAlign: "center", color: token("dim"), fontSize: 12 }}>
                   No expenses yet — add one.
                 </TableCell>
               </TableRow>

@@ -92,7 +92,7 @@ function readAsDataUrl(file: File): Promise<string> {
   });
 }
 
-function Side({ title, date, merchant, amount, income, category, account, tone }: {
+export function Side({ title, date, merchant, amount, income, category, account, tone }: {
   title: string; date: string; merchant: string; amount: number; income: boolean; category: string; account?: string; tone?: "accent" | "dim";
 }) {
   return (

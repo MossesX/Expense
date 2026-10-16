@@ -51,7 +51,13 @@ import * as React from "react";
 
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import Checkbox from "@mui/material/Checkbox";
 import Chip from "@mui/material/Chip";
+import Divider from "@mui/material/Divider";
+import ListItemIcon from "@mui/material/ListItemIcon";
+import ListItemText from "@mui/material/ListItemText";
+import Menu from "@mui/material/Menu";
+import MenuItem from "@mui/material/MenuItem";
 import Snackbar from "@mui/material/Snackbar";
 import IconButton from "@mui/material/IconButton";
 import InputAdornment from "@mui/material/InputAdornment";
@@ -63,7 +69,9 @@ import Typography from "@mui/material/Typography";
 import { Glyph, commands, settingsUi, token } from "@axf/core";
 
 import { MONO } from "./bits";
+import { GRID_COLUMNS, hiddenSet, showAllColumns, toggleColumn } from "./columns";
 import DeleteSelectedDialog from "./DeleteSelectedDialog";
+import DupeDialog from "./DupeDialog";
 import EmptyTabState from "./EmptyTabState";
 import ExpenseWindows from "./ExpenseWindows";
 import ExpensesSettingsDialog from "./ExpensesSettingsDialog";
@@ -105,6 +113,11 @@ export default function ExpensesModule() {
   const selected = useExpenseSelection();
   const ui = useExpensesUi();
   const prefs = useExpensesSettings();
+  // The header's View and Actions menus — anchored to their buttons, so they
+  // are component state; the context menu offers the same rows as submenus.
+  const [viewAnchor, setViewAnchor] = React.useState<HTMLElement | null>(null);
+  const [actionsAnchor, setActionsAnchor] = React.useState<HTMLElement | null>(null);
+  const hidden = React.useMemo(() => hiddenSet(prefs.hiddenColumns), [prefs.hiddenColumns]);
 
   /* ------------------------------------------------------------- the filter */
   const filterSpec = React.useMemo<FilterSpec>(
@@ -333,6 +346,36 @@ export default function ExpensesModule() {
             Scan images
           </Button>
         </Tooltip>
+        <Tooltip title="Choose which grid columns are shown. The same list is under View in the right-click menu.">
+          <Button size="small" variant="outlined" data-axf-expenses-view onClick={(e) => setViewAnchor(e.currentTarget)} endIcon={<Glyph id="icon-chevron-down" size={12} />}>
+            View{hidden.size ? ` (${hidden.size} hidden)` : ""}
+          </Button>
+        </Tooltip>
+        <Menu open={Boolean(viewAnchor)} anchorEl={viewAnchor} onClose={() => setViewAnchor(null)} slotProps={{ list: { dense: true, "data-axf-expenses-view-menu": "" } as never }}>
+          {GRID_COLUMNS.map((c) => (
+            <MenuItem key={c.id} onClick={() => toggleColumn(c.id)} sx={{ fontSize: 12.5, py: 0.2 }}>
+              <ListItemIcon sx={{ minWidth: 28 }}>
+                <Checkbox size="small" checked={!hidden.has(c.id)} tabIndex={-1} disableRipple sx={{ p: 0 }} />
+              </ListItemIcon>
+              <ListItemText primary={c.label} slotProps={{ primary: { sx: { fontSize: 12.5 } } }} />
+            </MenuItem>
+          ))}
+          <Divider />
+          <MenuItem disabled={!hidden.size} onClick={() => { showAllColumns(); setViewAnchor(null); }} sx={{ fontSize: 12.5, py: 0.3 }}>
+            Show all columns
+          </MenuItem>
+        </Menu>
+        <Tooltip title="Ledger-wide operations.">
+          <Button size="small" variant="outlined" data-axf-expenses-actions onClick={(e) => setActionsAnchor(e.currentTarget)} endIcon={<Glyph id="icon-chevron-down" size={12} />}>
+            Actions
+          </Button>
+        </Tooltip>
+        <Menu open={Boolean(actionsAnchor)} anchorEl={actionsAnchor} onClose={() => setActionsAnchor(null)} slotProps={{ list: { dense: true, "data-axf-expenses-actions-menu": "" } as never }}>
+          <MenuItem onClick={() => { setActionsAnchor(null); expenseUi.openDupes(); }} sx={{ fontSize: 12.5, py: 0.4 }}>
+            <ListItemIcon sx={{ minWidth: 28 }}><Glyph id="icon-search" size={14} /></ListItemIcon>
+            <ListItemText primary="Dupe — find possible duplicates…" secondary="Same price, other fields may differ · algorithm + Claude" slotProps={{ primary: { sx: { fontSize: 12.5 } }, secondary: { sx: { fontSize: 11 } } }} />
+          </MenuItem>
+        </Menu>
         <Tooltip title={selected.size ? `Delete ${selected.size} selected — you will see them first` : "Select rows to delete them"}>
           <span>
             <IconButton
@@ -464,6 +507,8 @@ export default function ExpensesModule() {
       <ImportDialog open={ui.importing} expenses={list} onClose={() => expenseUi.closeImport()} />
 
       <ImageImportDialog open={ui.scanning} expenses={list} onClose={() => expenseUi.closeScan()} />
+
+      <DupeDialog open={ui.dupes} expenses={list} onClose={() => expenseUi.closeDupes()} />
 
       <AssistantPanel />
 

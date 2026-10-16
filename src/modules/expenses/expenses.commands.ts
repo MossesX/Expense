@@ -20,6 +20,8 @@
  */
 import { activeContext, commands, predicates } from "@axf/core";
 
+import { GRID_COLUMNS, isColumnShown, showAllColumns, toggleColumn } from "./columns";
+
 import { missingPaydays, paydayEntry, todayIso } from "./payday";
 import { buildReportHtml, capturePalette, reportFileName } from "./report";
 import { expenseSelection } from "./selection";
@@ -288,6 +290,47 @@ export function registerExpensesCommands(): void {
         if (getExpensesSettings().confirmDelete) expenseUi.openDeleteSelected();
         else deleteExpenses(ids);
       }
+    });
+  }
+
+  /* ------------------------------ View › columns --------------------------- */
+
+  // One toggle command and one `checkedWhen` predicate per hideable column
+  // (`columns.ts`): the context menu's View submenu draws each column's state
+  // from the predicate and flips it through the command. Both in a loop over
+  // the same list the grid reads, so a column cannot be in the menu and not in
+  // the grid or the other way round.
+  for (const col of GRID_COLUMNS) {
+    if (!predicates.has(`expenses.col.${col.id}`)) {
+      predicates.register({
+        id: `expenses.col.${col.id}`,
+        title: `The ${col.label} column is shown`,
+        test: () => (isColumnShown(col.id) ? true : `the ${col.label} column is hidden`)
+      });
+    }
+    if (!commands.has(`expenses.col.toggle-${col.id}`)) {
+      commands.register({
+        id: `expenses.col.toggle-${col.id}`,
+        title: `Show / hide the ${col.label} column`,
+        run: () => toggleColumn(col.id)
+      });
+    }
+  }
+  if (!commands.has("expenses.col.show-all")) {
+    commands.register({
+      id: "expenses.col.show-all",
+      title: "Show every grid column",
+      run: () => showAllColumns()
+    });
+  }
+
+  /* ------------------------------- Actions ------------------------------- */
+
+  if (!commands.has("expenses.actions.dupes")) {
+    commands.register({
+      id: "expenses.actions.dupes",
+      title: "Find possible duplicate transactions (same price, fields may differ)",
+      run: () => expenseUi.openDupes()
     });
   }
 

@@ -36,6 +36,8 @@ export interface ExpensesSettings {
   defaultSort: string;
   defaultSortDir: string;
   filterColumns: string;
+  /** Comma-separated grid column ids hidden from view (`columns.ts`). */
+  hiddenColumns: string;
   filterMatchAll: boolean;
   statementPeriod: string;
   // Paydays
@@ -78,6 +80,7 @@ export const DEFAULT_SETTINGS: ExpensesSettings = {
   defaultSort: "date",
   defaultSortDir: "desc",
   filterColumns: "",
+  hiddenColumns: "",
   filterMatchAll: true,
   statementPeriod: "month",
   paydayAmount: 0,
@@ -119,7 +122,7 @@ export const SECTIONS: readonly { id: string; title: string; blurb: string; keys
     id: "grid",
     title: "Grid & filter",
     blurb: "The grid's defaults, and how the filter field reads what you type.",
-    keys: ["showHints", "denseRows", "defaultSort", "defaultSortDir", "filterMatchAll", "filterColumns", "statementPeriod"]
+    keys: ["showHints", "denseRows", "hiddenColumns", "defaultSort", "defaultSortDir", "filterMatchAll", "filterColumns", "statementPeriod"]
   },
   {
     id: "paydays",
