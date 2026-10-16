@@ -26,6 +26,8 @@ import DialogTitle from "@mui/material/DialogTitle";
 import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
+import ToggleButton from "@mui/material/ToggleButton";
+import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
 
 import { token } from "@axf/core";
@@ -34,7 +36,6 @@ import { MONO, StatTile, autoDashIso } from "./bits";
 import { fillPaydays } from "./expenses.commands";
 import { evalAmount, money } from "./math";
 import {
-  PAY_FREQUENCIES,
   WEEKDAYS,
   calendarStart,
   isIsoDate,
@@ -190,21 +191,28 @@ export default function PaydayDialog({
             helperText={amount.trim() !== "" && draftCents === null ? "Not an amount" : " "}
             sx={{ width: 180, "& input": { ...MONO, fontSize: 12.5 } }}
           />
-          <TextField
-            select
-            size="small"
-            label="Paid every"
-            value={every}
-            onChange={(e) => setEvery(e.target.value as PayFrequency)}
-            helperText=" "
-            sx={{ width: 220 }}
-          >
-            {PAY_FREQUENCIES.map((f) => (
-              <MenuItem key={f.value} value={f.value} sx={{ fontSize: 12.5 }}>
-                {f.label}
-              </MenuItem>
-            ))}
-          </TextField>
+          {/* The frequency as a SWITCH, not a dropdown (owner, 2026-10-16):
+              four choices that are always on view and one tap apart, and the
+              fields underneath change with the one that is pressed. */}
+          <Box>
+            <Typography sx={{ fontSize: 11, color: token("dim"), mb: 0.5 }}>Paid every</Typography>
+            <ToggleButtonGroup
+              size="small"
+              exclusive
+              value={every}
+              onChange={(_, v: PayFrequency | null) => {
+                if (v) setEvery(v);
+              }}
+              aria-label="Pay frequency"
+              data-axf-payday-frequency={every}
+              sx={{ "& .MuiToggleButton-root": { textTransform: "none", fontSize: 12.5, px: 1.4, py: 0.55, whiteSpace: "nowrap" } }}
+            >
+              <ToggleButton value="weekly">Week</ToggleButton>
+              <ToggleButton value="biweekly">Two weeks</ToggleButton>
+              <ToggleButton value="semimonthly">1st &amp; 15th</ToggleButton>
+              <ToggleButton value="monthly">Month</ToggleButton>
+            </ToggleButtonGroup>
+          </Box>
         </Stack>
 
         <Stack direction="row" spacing={1.2} useFlexGap sx={{ flexWrap: "wrap" }}>
