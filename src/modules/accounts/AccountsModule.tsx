@@ -2,8 +2,9 @@
  * @file The Accounts screen — the member surface, and the login card's second
  * home: signed out it renders `./LoginCard` (username/password against
  * `accounts.json`, plus the forced password-change step while an admin-issued
- * temp credential is in force); signed in it is a left rail over four
- * surfaces — Members (the directory + admin CRUD, and the read-only profile
+ * temp credential is in force); signed in it is a left rail (collapsible to
+ * its icons through the ≡ at its top — the choice persists per browser) over
+ * four surfaces — Members (the directory + admin CRUD, and the read-only profile
  * viewer it opens), Messages (the messenger) and My profile (the profile
  * editor), and, for administrators only, Admin — which since 2026-08-15 is a
  * tab strip (`./AdminSurface`): the overview + the permission matrix are its
@@ -40,10 +41,12 @@ import * as React from "react";
 import Badge from "@mui/material/Badge";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import ButtonBase from "@mui/material/ButtonBase";
 import CircularProgress from "@mui/material/CircularProgress";
 import Stack from "@mui/material/Stack";
 import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
+import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 
 import { Glyph, token } from "@axf/core";
@@ -58,18 +61,116 @@ import { accountsStore, useAccountsState } from "./store";
 
 type Surface = "members" | "messages" | "profile" | "state" | "admin";
 
-/** One rail tab's label — glyph + text, the unread badge on Messages. */
-function RailLabel({ glyph, text, badge }: { glyph: string; text: string; badge?: number }) {
+/* ------------------------------------------------------------ collapsing --- */
+
+/**
+ * Whether the left rail is collapsed to its icons — a per-browser habit kept in
+ * `localStorage` (owner, 2026-10-16: *"make left menu collapsible"*), the same
+ * arrangement core's `NavShell` uses for the app nav and for the same reason:
+ * it is one person's preference for this afternoon, not a theme dial.
+ *
+ * The server and the first client frame both see "expanded"; the stored
+ * choice lands in an effect, so hydration cannot tear over a value the server
+ * cannot read.
+ */
+const RAIL_COLLAPSED_KEY = "axs:accounts:rail:collapsed";
+
+const RAIL_WIDTH = 200;
+const RAIL_WIDTH_COLLAPSED = 56;
+
+function useRailCollapsed(): [boolean, () => void] {
+  const [collapsed, setCollapsed] = React.useState(false);
+  React.useEffect(() => {
+    try {
+      setCollapsed(window.localStorage.getItem(RAIL_COLLAPSED_KEY) === "1");
+    } catch {
+      /* storage blocked — expanded, for the session */
+    }
+  }, []);
+  const toggle = React.useCallback(() => {
+    setCollapsed((prev) => {
+      const next = !prev;
+      try {
+        window.localStorage.setItem(RAIL_COLLAPSED_KEY, next ? "1" : "0");
+      } catch {
+        /* see above */
+      }
+      return next;
+    });
+  }, []);
+  return [collapsed, toggle];
+}
+
+/** The ≡ control. Three bars rather than a pack glyph, so it exists in every
+ *  pack — including one that ships no icons at all. */
+function RailToggle({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {
+  return (
+    <ButtonBase
+      onClick={onToggle}
+      aria-label={collapsed ? "Expand menu" : "Collapse menu"}
+      aria-expanded={!collapsed}
+      title={collapsed ? "Expand menu" : "Collapse menu"}
+      data-axf-accounts-rail-toggle={collapsed ? "collapsed" : "expanded"}
+      sx={{
+        width: 34,
+        height: 30,
+        flexShrink: 0,
+        borderRadius: "6px",
+        color: token("ink"),
+        "&:hover": { background: `color-mix(in srgb, ${token("accent")} 14%, transparent)` }
+      }}
+    >
+      <Box
+        component="span"
+        aria-hidden
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          gap: "3px",
+          "& > span": { display: "block", width: 16, height: 2, borderRadius: 1, background: "currentColor" }
+        }}
+      >
+        <span />
+        <span />
+        <span />
+      </Box>
+    </ButtonBase>
+  );
+}
+
+/** One rail tab's label — glyph + text, the unread badge on Messages. Collapsed,
+ *  the glyph alone, with the text as a tooltip so the rail stays legible. */
+function RailLabel({
+  glyph,
+  text,
+  badge,
+  collapsed
+}: {
+  glyph: string;
+  text: string;
+  badge?: number;
+  collapsed?: boolean;
+}) {
   const icon = <Glyph id={glyph} size={15} />;
+  const badged = badge ? (
+    <Badge badgeContent={badge} color="primary" sx={{ "& .MuiBadge-badge": { fontSize: 9 } }}>
+      {icon}
+    </Badge>
+  ) : (
+    icon
+  );
+  if (collapsed) {
+    return (
+      <Tooltip title={text} placement="right">
+        <Box component="span" sx={{ display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+          {badged}
+        </Box>
+      </Tooltip>
+    );
+  }
   return (
     <Stack direction="row" sx={{ alignItems: "center", gap: 1.25, width: "100%" }}>
-      {badge ? (
-        <Badge badgeContent={badge} color="primary" sx={{ "& .MuiBadge-badge": { fontSize: 9 } }}>
-          {icon}
-        </Badge>
-      ) : (
-        icon
-      )}
+      {badged}
       <Typography component="span" sx={{ fontSize: 12.5, textTransform: "none" }}>
         {text}
       </Typography>
@@ -102,6 +203,7 @@ export default function AccountsModule() {
   const state = useAccountsState();
   const [surface, setSurface] = React.useState<Surface>("members");
   const requested = useRequestedSurface();
+  const [collapsed, toggleCollapsed] = useRailCollapsed();
 
   const administrator = state.permissions?.administrator === true;
 
@@ -145,32 +247,47 @@ export default function AccountsModule() {
     >
       {/* ------------------------------- left rail ------------------------------- */}
       <Stack
+        data-axf-accounts-rail={collapsed ? "collapsed" : "expanded"}
         sx={{
-          width: 200,
+          width: collapsed ? RAIL_WIDTH_COLLAPSED : RAIL_WIDTH,
           flexShrink: 0,
           minHeight: 0,
           borderRight: `1px solid ${token("edge")}`,
+          transition: "width var(--axf-motion, 160ms) var(--axf-easing, ease)",
+          overflow: "hidden"
         }}
       >
-        <Stack direction="row" sx={{ alignItems: "center", gap: 1.25, p: "12px 14px 8px" }}>
-          <Glyph id="icon-account" size={20} />
-          <Box sx={{ minWidth: 0, flex: 1 }}>
-            <Typography
-              sx={{
-                fontSize: 12.5,
-                fontWeight: 700,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {me.screenname ?? me.username}
-            </Typography>
-            <Typography sx={{ fontSize: 10.5, color: token("dim"), fontFamily: token("mono") }}>
-              {me.role}
-            </Typography>
-          </Box>
-        </Stack>
+        <Box sx={{ display: "flex", p: "6px 6px 0", justifyContent: collapsed ? "center" : "flex-start" }}>
+          <RailToggle collapsed={collapsed} onToggle={toggleCollapsed} />
+        </Box>
+
+        {collapsed ? (
+          <Tooltip title={`${me.screenname ?? me.username} · ${me.role}`} placement="right">
+            <Box sx={{ display: "flex", justifyContent: "center", p: "8px 0 6px" }}>
+              <Glyph id="icon-account" size={20} />
+            </Box>
+          </Tooltip>
+        ) : (
+          <Stack direction="row" sx={{ alignItems: "center", gap: 1.25, p: "6px 14px 8px" }}>
+            <Glyph id="icon-account" size={20} />
+            <Box sx={{ minWidth: 0, flex: 1 }}>
+              <Typography
+                sx={{
+                  fontSize: 12.5,
+                  fontWeight: 700,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {me.screenname ?? me.username}
+              </Typography>
+              <Typography sx={{ fontSize: 10.5, color: token("dim"), fontFamily: token("mono") }}>
+                {me.role}
+              </Typography>
+            </Box>
+          </Stack>
+        )}
 
         <Tabs
           orientation="vertical"
@@ -181,32 +298,45 @@ export default function AccountsModule() {
             flex: 1,
             "& .MuiTab-root": {
               minHeight: 40,
-              alignItems: "flex-start",
-              px: "14px",
+              minWidth: 0,
+              alignItems: collapsed ? "center" : "flex-start",
+              px: collapsed ? 0 : "14px",
               opacity: 0.85,
             },
             "& .Mui-selected": { opacity: 1 },
           }}
         >
-          <Tab value="members" label={<RailLabel glyph="icon-account" text="Members" />} />
+          <Tab value="members" label={<RailLabel glyph="icon-account" text="Members" collapsed={collapsed} />} />
           <Tab
             value="messages"
-            label={<RailLabel glyph="icon-chat" text="Messages" badge={state.unread} />}
+            label={<RailLabel glyph="icon-chat" text="Messages" badge={state.unread} collapsed={collapsed} />}
           />
-          <Tab value="profile" label={<RailLabel glyph="icon-account" text="My profile" />} />
-          <Tab value="state" label={<RailLabel glyph="icon-eye" text="State" />} />
+          <Tab value="profile" label={<RailLabel glyph="icon-account" text="My profile" collapsed={collapsed} />} />
+          <Tab value="state" label={<RailLabel glyph="icon-eye" text="State" collapsed={collapsed} />} />
           {administrator && (
-            <Tab value="admin" label={<RailLabel glyph="icon-gear" text="Admin" />} />
+            <Tab value="admin" label={<RailLabel glyph="icon-gear" text="Admin" collapsed={collapsed} />} />
           )}
         </Tabs>
 
-        <Button
-          size="small"
-          onClick={() => void accountsStore.logout()}
-          sx={{ m: 1, color: token("dim"), fontSize: 12, textTransform: "none" }}
-        >
-          Sign out
-        </Button>
+        {collapsed ? (
+          <Tooltip title="Sign out" placement="right">
+            <ButtonBase
+              aria-label="Sign out"
+              onClick={() => void accountsStore.logout()}
+              sx={{ m: 1, height: 30, borderRadius: "6px", color: token("dim") }}
+            >
+              <Glyph id="icon-power" size={15} />
+            </ButtonBase>
+          </Tooltip>
+        ) : (
+          <Button
+            size="small"
+            onClick={() => void accountsStore.logout()}
+            sx={{ m: 1, color: token("dim"), fontSize: 12, textTransform: "none" }}
+          >
+            Sign out
+          </Button>
+        )}
       </Stack>
 
       {/* ------------------------------- surfaces -------------------------------- */}
