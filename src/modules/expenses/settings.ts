@@ -61,6 +61,10 @@ export interface ExpensesSettings {
   importSkipPayments: boolean;
   importDateSlack: number;
   importAmountSlack: number;
+  extraAccounts: string;
+  // AI
+  aiMode: string;
+  aiModel: string;
 }
 
 export const DEFAULT_SETTINGS: ExpensesSettings = {
@@ -95,7 +99,10 @@ export const DEFAULT_SETTINGS: ExpensesSettings = {
   importAccount: "Capital One",
   importSkipPayments: true,
   importDateSlack: 4,
-  importAmountSlack: 1
+  importAmountSlack: 1,
+  extraAccounts: "",
+  aiMode: "auto",
+  aiModel: "claude-opus-5-5"
 };
 
 export type SettingKey = keyof ExpensesSettings;
@@ -140,7 +147,13 @@ export const SECTIONS: readonly { id: string; title: string; blurb: string; keys
     id: "import",
     title: "Import",
     blurb: "Defaults for importing bank transactions and how loosely duplicates are matched.",
-    keys: ["importAccount", "importSkipPayments", "importDateSlack", "importAmountSlack"]
+    keys: ["importAccount", "importSkipPayments", "importDateSlack", "importAmountSlack", "extraAccounts"]
+  },
+  {
+    id: "ai",
+    title: "AI",
+    blurb: "How the app reaches Claude — for reading statement images and the assistant.",
+    keys: ["aiMode", "aiModel"]
   }
 ];
 

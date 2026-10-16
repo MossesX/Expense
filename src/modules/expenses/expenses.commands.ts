@@ -28,6 +28,7 @@ import { expenseStore, blankExpense, blankIncome } from "./store";
 import { INCOME_CATEGORY, isIncome } from "./types";
 import { expenseTabs } from "./tabs";
 import { expenseUi } from "./ui";
+import { assistantUi, pageContext } from "./assistant/client";
 import { buildStatement, effectiveTotal, money, periodOf, periodsIn, reconcile } from "./math";
 
 /** The click's harvested data — `{}` when a command is fired from a palette. */
@@ -286,6 +287,33 @@ export function registerExpensesCommands(): void {
         // (DeleteSelectedDialog); off, the delete is immediate.
         if (getExpensesSettings().confirmDelete) expenseUi.openDeleteSelected();
         else deleteExpenses(ids);
+      }
+    });
+  }
+
+  if (!commands.has("expenses.ledger.scan-image")) {
+    commands.register({
+      id: "expenses.ledger.scan-image",
+      title: "Read transactions from a statement image, skipping duplicates",
+      run: () => expenseUi.openScan()
+    });
+  }
+
+  if (!commands.has("expenses.assistant.open")) {
+    commands.register({
+      id: "expenses.assistant.open",
+      title: "Open the assistant",
+      run: () => assistantUi.open({ context: pageContext() })
+    });
+  }
+
+  if (!commands.has("expenses.assistant.ask")) {
+    commands.register({
+      id: "expenses.assistant.ask",
+      title: "Ask the assistant about the selection or the page",
+      run: () => {
+        const ctx = pageContext();
+        assistantUi.open({ text: ctx.selection ? "Explain this:" : "", context: ctx });
       }
     });
   }

@@ -30,6 +30,7 @@ export interface ExpensesUiState {
    *  is not a vault mode and must not be typed as one. */
   readonly payday: boolean;
   readonly importing: boolean;
+  readonly scanning: boolean;
   readonly settings: boolean;
   readonly deleting: boolean;
   readonly filterDialog: boolean;
@@ -44,6 +45,7 @@ const INITIAL: ExpensesUiState = {
   dialog: null,
   payday: false,
   importing: false,
+  scanning: false,
   settings: false,
   deleting: false,
   filterDialog: false,
@@ -100,6 +102,14 @@ class UiStore {
   }
 
   /** One opener/closer per boolean flag, so a command can name the dialog. */
+  openScan(): void {
+    if (!this.#state.scanning) this.#set({ scanning: true });
+  }
+
+  closeScan(): void {
+    if (this.#state.scanning) this.#set({ scanning: false });
+  }
+
   openSettings(): void {
     if (!this.#state.settings) this.#set({ settings: true });
   }
