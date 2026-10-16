@@ -75,6 +75,10 @@ function ConnRow({ title, hint, has, masked, source, verifiedAt, detail, extra, 
   );
 }
 
+/** Same rule as the server: a token or key never contains whitespace, so a
+ *  wrapped paste is joined back together as it is typed. */
+const cleanSecret = (s: string) => s.replace(/\s+/g, "");
+
 export default function AiSettingsPanel() {
   const [view, setView] = React.useState<View | null>(null);
   const [name, setName] = React.useState("");
@@ -162,11 +166,11 @@ export default function AiSettingsPanel() {
       <Box>
         <Typography sx={{ fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase", color: token("dim"), mb: 0.6 }}>Credentials</Typography>
         <Stack spacing={1}>
-          <TextField size="small" type="password" autoComplete="off" label="Claude subscription token" value={subToken} onChange={(e) => setSubToken(e.target.value)} placeholder={s.hasSubscriptionToken ? "Paste a new token to replace it" : "sk-ant-oat01-…"} slotProps={{ htmlInput: { "data-axf-ai-sub": "" } }} />
+          <TextField size="small" type="password" autoComplete="off" label="Claude subscription token" value={subToken} onChange={(e) => setSubToken(cleanSecret(e.target.value))} placeholder={s.hasSubscriptionToken ? "Paste a new token to replace it" : "sk-ant-oat01-…"} slotProps={{ htmlInput: { "data-axf-ai-sub": "" } }} />
           <Typography sx={{ fontSize: 11, color: token("dim") }}>
             On your own computer: <Box component="code" sx={{ ...MONO }}>npm install -g @anthropic-ai/claude-code</Box>, then <Box component="code" sx={{ ...MONO }}>claude login</Box>, then <Box component="code" sx={{ ...MONO }}>claude setup-token</Box>. Paste the token here. Or set CLAUDE_CODE_OAUTH_TOKEN on the server.
           </Typography>
-          <TextField size="small" type="password" autoComplete="off" label="Anthropic API key (backup)" value={apiKey} onChange={(e) => setApiKey(e.target.value)} placeholder={s.hasApiKey ? "Paste a new key to replace it" : "sk-ant-api03-…"} slotProps={{ htmlInput: { "data-axf-ai-key": "" } }} />
+          <TextField size="small" type="password" autoComplete="off" label="Anthropic API key (backup)" value={apiKey} onChange={(e) => setApiKey(cleanSecret(e.target.value))} placeholder={s.hasApiKey ? "Paste a new key to replace it" : "sk-ant-api03-…"} slotProps={{ htmlInput: { "data-axf-ai-key": "" } }} />
           <Typography sx={{ fontSize: 11, color: token("dim") }}>From console.anthropic.com → API keys. Or set ANTHROPIC_API_KEY on the server.</Typography>
           <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: "wrap" }}>
             <Button size="small" variant="contained" disabled={!!busy || (!subToken.trim() && !apiKey.trim())} onClick={() => void save({ subscriptionToken: subToken || undefined, apiKey: apiKey || undefined }, "Credentials saved — press Verify")}>

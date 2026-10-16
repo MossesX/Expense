@@ -19,6 +19,10 @@ import { axfKv } from "../axfKv";
 
 export const AI_SECRET_NS = "expenses-ai-secret";
 
+/** A pasted token or key with every space and line break removed — a wrapped
+ *  paste from a phone or an email arrives with them (owner, 2026-10-16). */
+export const cleanSecret = (s: string): string => s.replace(/\s+/g, "");
+
 export type CredentialSource = "none" | "settings" | "env";
 
 export interface Credentials {
@@ -58,9 +62,9 @@ export async function saveCredentials(user: string, patch: { subscriptionToken?:
   const cur = await readSecrets(user);
   const next: SecretDoc = { ...cur };
   if (patch.subscriptionToken === null) next.subscriptionToken = "";
-  else if (typeof patch.subscriptionToken === "string" && patch.subscriptionToken.trim()) next.subscriptionToken = patch.subscriptionToken.trim();
+  else if (typeof patch.subscriptionToken === "string" && cleanSecret(patch.subscriptionToken)) next.subscriptionToken = cleanSecret(patch.subscriptionToken);
   if (patch.apiKey === null) next.apiKey = "";
-  else if (typeof patch.apiKey === "string" && patch.apiKey.trim()) next.apiKey = patch.apiKey.trim();
+  else if (typeof patch.apiKey === "string" && cleanSecret(patch.apiKey)) next.apiKey = cleanSecret(patch.apiKey);
   if (!next.subscriptionToken && !next.apiKey) await axfKv.remove(user, AI_SECRET_NS);
   else await axfKv.write(user, AI_SECRET_NS, { ...next, updatedAt: new Date().toISOString() });
 }
