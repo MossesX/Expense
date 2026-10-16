@@ -1,0 +1,9 @@
+{
+  "name": "app-health",
+  "description": "The app's health report: registry violations, subsystem states, framework version. Use when something is broken and you need facts before guessing.",
+  "input_schema": {
+    "type": "object",
+    "properties": {},
+    "required": []
+  }
+}

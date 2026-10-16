@@ -1,0 +1,20 @@
+{
+  "name": "run-command",
+  "description": "Run a registered command by name. Ask first when the command is destructive — the context menus mark those rows danger and this tool does not re-check.",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "command": {
+        "type": "string",
+        "description": "Registered command name, e.g. \"taskman.new-list\"."
+      },
+      "data": {
+        "type": "object",
+        "description": "Command context, the shape the handler reads."
+      }
+    },
+    "required": [
+      "command"
+    ]
+  }
+}

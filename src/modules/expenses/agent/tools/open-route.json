@@ -1,0 +1,16 @@
+{
+  "name": "open-route",
+  "description": "Navigate the app to a route. Use to take the user to the surface being discussed instead of describing how to find it.",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "route": {
+        "type": "string",
+        "description": "Route path with a leading slash, e.g. \"/taskman\"."
+      }
+    },
+    "required": [
+      "route"
+    ]
+  }
+}

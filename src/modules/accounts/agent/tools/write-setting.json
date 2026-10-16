@@ -1,0 +1,30 @@
+{
+  "name": "write-setting",
+  "description": "Set one settings key. The value must match the row's declared kind; a switch takes a boolean, a select takes one of its declared option values.",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "ns": {
+        "type": "string",
+        "description": "Settings namespace."
+      },
+      "key": {
+        "type": "string",
+        "description": "The row's key."
+      },
+      "value": {
+        "description": "New value — boolean, number or string, matching the row's kind.",
+        "type": [
+          "boolean",
+          "number",
+          "string"
+        ]
+      }
+    },
+    "required": [
+      "ns",
+      "key",
+      "value"
+    ]
+  }
+}

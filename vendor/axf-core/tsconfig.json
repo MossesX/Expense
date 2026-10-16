@@ -1,0 +1,31 @@
+{
+  "//": [
+    "Core's OWN tsconfig. It deliberately declares NO `@/*` alias, so a file",
+    "here cannot resolve GizmoX's src/ even by accident — that is AmberX",
+    "INITIATION-PROMPT.md §5.1 tier 1, and it is the reason this package sits",
+    "outside the root tsconfig rather than inside it.",
+    "",
+    "There is also no `@axs/*` alias: core must never reach the SDK. The rule is",
+    "enforced by the absence of a way to express it, not by a review."
+  ],
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "skipLibCheck": true,
+    "jsx": "react-jsx",
+    "baseUrl": ".",
+    "paths": {
+      "@axf/core": ["./src/index.ts"],
+      "@axf/core/*": ["./src/*"]
+    }
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "exclude": ["node_modules"]
+}

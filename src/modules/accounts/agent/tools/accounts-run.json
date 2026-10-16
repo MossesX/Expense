@@ -1,0 +1,43 @@
+{
+  "name": "accounts-run",
+  "description": "Run one of Accounts's declared operations. Destructive rows are marked in the description — confirm with the user before running one.",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "command": {
+        "type": "string",
+        "description": "ctx.copy — Copy from Accounts; accounts.suite.refresh — Refresh; accounts.layout.reset — Reset layout; accounts.session.settings — App settings; accounts.user.open-suite — Open in admin suite; accounts.user.view-files — View files; accounts.user.view-storage — View storage; accounts.user.message — Message user; accounts.user.copy-id — Copy user id; accounts.file.preview — Preview; accounts.file.download — Download; accounts.file.copy-path — Copy path; accounts.policy.pin — Pin override; accounts.policy.unpin — Follow default; accounts.policy.copy-value — Copy effective value; accounts.card.configure — Configure card…; accounts.card.flip — Flip orientation; accounts.card.reset — Reset this card; accounts.layout.reset — Reset layout; theme-manager.token.locate — Locate on page; theme-manager.token.copy-value — Copy value; theme-manager.token.revert — Revert this token",
+        "enum": [
+          "ctx.copy",
+          "accounts.suite.refresh",
+          "accounts.layout.reset",
+          "accounts.session.settings",
+          "accounts.user.open-suite",
+          "accounts.user.view-files",
+          "accounts.user.view-storage",
+          "accounts.user.message",
+          "accounts.user.copy-id",
+          "accounts.file.preview",
+          "accounts.file.download",
+          "accounts.file.copy-path",
+          "accounts.policy.pin",
+          "accounts.policy.unpin",
+          "accounts.policy.copy-value",
+          "accounts.card.configure",
+          "accounts.card.flip",
+          "accounts.card.reset",
+          "theme-manager.token.locate",
+          "theme-manager.token.copy-value",
+          "theme-manager.token.revert"
+        ]
+      },
+      "data": {
+        "type": "object",
+        "description": "Context the row would have carried — the item, list or selection the command acts on."
+      }
+    },
+    "required": [
+      "command"
+    ]
+  }
+}

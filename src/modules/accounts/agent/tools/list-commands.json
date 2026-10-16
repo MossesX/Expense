@@ -1,0 +1,14 @@
+{
+  "name": "list-commands",
+  "description": "Every registered command name, optionally filtered by prefix. Use to check a command exists before naming it, and to find the command behind a menu row.",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "prefix": {
+        "type": "string",
+        "description": "Only commands starting with this, e.g. \"taskman.\"."
+      }
+    },
+    "required": []
+  }
+}

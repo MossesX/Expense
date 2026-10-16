@@ -1,0 +1,9 @@
+{
+  "name": "expenses-open",
+  "description": "Open Expense Tracker (/expenses). Use to put the module on screen before walking the user through it.",
+  "input_schema": {
+    "type": "object",
+    "properties": {},
+    "required": []
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "list-modules",
+  "description": "List the modules registered in this app — id, title, route and summary. Use before claiming a capability lives somewhere else, and to answer \"what else can this app do\".",
+  "input_schema": {
+    "type": "object",
+    "properties": {},
+    "required": []
+  }
+}

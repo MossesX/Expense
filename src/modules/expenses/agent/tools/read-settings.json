@@ -1,0 +1,16 @@
+{
+  "name": "read-settings",
+  "description": "Read a settings namespace as stored — every key with its current value. Use to answer \"what is this set to\" rather than quoting the declared default.",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "ns": {
+        "type": "string",
+        "description": "Settings namespace, e.g. \"taskman-settings\"."
+      }
+    },
+    "required": [
+      "ns"
+    ]
+  }
+}

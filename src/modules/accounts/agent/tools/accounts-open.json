@@ -1,0 +1,9 @@
+{
+  "name": "accounts-open",
+  "description": "Open Accounts (/accounts). Use to put the module on screen before walking the user through it.",
+  "input_schema": {
+    "type": "object",
+    "properties": {},
+    "required": []
+  }
+}

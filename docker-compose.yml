@@ -1,0 +1,69 @@
+# expenses.amberxai.com — the peeled Expense Tracker.
+#
+#   packages/studio/deploy/expenses/build.sh      # peel → overlay → build → up
+#
+# Same three-layer posture as the studio's deploy/docker-compose.yml: no host
+# port, reached only through Coolify's Traefik on the shared `coolify` network,
+# and the app's own login (accounts companion + proxy.ts overlay) is the gate.
+#
+# DATA: this app mounts the SAME volume as the studio (`amberx-studio-data`).
+# The ledger (`axf/kv/<user>/expenses.json`), the pay schedule
+# (`axf/kv/<user>/expenses-settings.json`), the saves/reports vault
+# (`axf/expenses/<user>/`) and the accounts store (`accounts/`) are therefore
+# one copy: an expense added here is on studio.amberxai.com/expenses and vice
+# versa, and the same usernames and passwords sign in on both hosts. Sessions
+# are NOT shared — the cookie is per host — so each host asks you to sign in
+# once. To cut the app loose from the studio instead, point
+# EXPENSES_DATA_VOLUME at a volume seeded by copying those four paths.
+services:
+  expenses:
+    container_name: amberx-expenses
+    image: amberx-expenses:latest
+    build: .
+    restart: unless-stopped
+    environment:
+      AXS_DATA_ROOT: /data
+      AXF_ROOT: /app
+      AXF_ASSETS_ROOT: /app/assets
+      NODE_ENV: production
+      PORT: "3200"
+      HOSTNAME: 0.0.0.0
+    volumes:
+      - ${EXPENSES_DATA_VOLUME:-amberx-studio-data}:/data
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3200/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+        ]
+      interval: 30s
+      timeout: 5s
+      start_period: 40s
+      retries: 3
+    networks:
+      - traefik
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: ${TRAEFIK_NETWORK:-coolify}
+      traefik.http.routers.amberx-expenses.rule: Host(`expenses.amberxai.com`)
+      traefik.http.routers.amberx-expenses.entrypoints: https
+      traefik.http.routers.amberx-expenses.tls: "true"
+      traefik.http.routers.amberx-expenses.tls.certresolver: letsencrypt
+      traefik.http.routers.amberx-expenses-http.rule: Host(`expenses.amberxai.com`)
+      traefik.http.routers.amberx-expenses-http.entrypoints: http
+      traefik.http.routers.amberx-expenses-http.middlewares: amberx-expenses-https@docker
+      traefik.http.middlewares.amberx-expenses-https.redirectscheme.scheme: https
+      traefik.http.middlewares.amberx-expenses-https.redirectscheme.permanent: "true"
+      traefik.http.services.amberx-expenses.loadbalancer.server.port: "3200"
+
+networks:
+  traefik:
+    external: true
+    name: ${TRAEFIK_NETWORK:-coolify}
+
+volumes:
+  amberx-studio-data:
+    external: true
+    name: amberx-studio-data

@@ -1,0 +1,10 @@
+{
+  "id": "plugin-manager",
+  "kind": "plugin",
+  "name": "Plugin Manager",
+  "version": "0.1.0",
+  "layer": "sdk",
+  "target": "core",
+  "entry": "plugin.ts",
+  "summary": "The roster of every plugin in the install: what each one contributes, its settings, its documentation and its files — with enable/disable through each plugin's own store, and import/export of the one package artifact `npm run pack` and the engine's HTTP routes both speak."
+}

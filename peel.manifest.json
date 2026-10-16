@@ -1,0 +1,151 @@
+{
+  "format": "axf-peel/1",
+  "module": "expenses",
+  "title": "Expense Tracker",
+  "entryRoute": "/expenses",
+  "nav": null,
+  "ctxAreas": [
+    "expenses.expense",
+    "expenses.node",
+    "expenses.surface",
+    "expenses.tab",
+    "expenses.tabstrip"
+  ],
+  "routes": [
+    "app/api/expenses/files/route.ts",
+    "app/api/expenses/route.ts"
+  ],
+  "companions": [
+    {
+      "id": "accounts",
+      "title": "Accounts",
+      "route": "/accounts",
+      "dir": "src/modules/accounts",
+      "nav": null,
+      "navRegistered": false,
+      "ctxAreas": [
+        "accounts.surface",
+        "accounts.suite",
+        "accounts.user-row",
+        "accounts.file-row",
+        "accounts.policy-row",
+        "accounts.card",
+        "accounts.token-row"
+      ],
+      "points": [
+        "accounts.admin-tab"
+      ],
+      "routes": [
+        "app/api/accounts/admin/audit/route.ts",
+        "app/api/accounts/admin/dashboard/route.ts",
+        "app/api/accounts/admin/files/route.ts",
+        "app/api/accounts/admin/policy/route.ts",
+        "app/api/accounts/admin/route.ts",
+        "app/api/accounts/admin/users/route.ts",
+        "app/api/accounts/credits/route.ts",
+        "app/api/accounts/messages/route.ts",
+        "app/api/accounts/permissions/route.ts",
+        "app/api/accounts/presence/route.ts",
+        "app/api/accounts/profiles/route.ts",
+        "app/api/accounts/relations/route.ts",
+        "app/api/accounts/session/route.ts",
+        "app/api/accounts/states/route.ts",
+        "app/api/accounts/storage/route.ts",
+        "app/api/accounts/users/route.ts"
+      ]
+    }
+  ],
+  "mediaServer": null,
+  "discoveredDependencies": [],
+  "peeledAt": "2026-10-16T05:26:11.673Z",
+  "peeledFrom": "packages/studio",
+  "framework": {
+    "package": "@axf/core",
+    "version": "0.0.25",
+    "packageVersion": "0.0.1",
+    "vendoredTo": "vendor/axf-core",
+    "files": 91
+  },
+  "closure": {
+    "rule": "a plugin is carried when it exports a contribution whose point starts with \"expenses.\" — plus enabled target:\"universal\" plugins on the host points, minus anything the ledger disables",
+    "points": [],
+    "carries": [],
+    "unscanned": [
+      {
+        "plugin": "agent-forge",
+        "error": "Cannot find package 'react' imported from /w/packages/studio/src/plugins/agent-forge/plugin.ts"
+      },
+      {
+        "plugin": "diff-browser",
+        "error": "Cannot find package 'react' imported from /w/packages/studio/src/plugins/diff-browser/plugin.ts"
+      },
+      {
+        "plugin": "module-assistant",
+        "error": "Cannot find package 'react' imported from /w/packages/studio/src/plugins/module-assistant/plugin.ts"
+      },
+      {
+        "plugin": "tab-bar",
+        "error": "Cannot find package 'react' imported from /w/packages/studio/src/plugins/tab-bar/plugin.ts"
+      },
+      {
+        "plugin": "theme-manager",
+        "error": "Cannot find package 'react' imported from /w/packages/studio/src/plugins/theme-manager/plugin.ts"
+      }
+    ],
+    "disabled": [],
+    "left": []
+  },
+  "pluginEngine": {
+    "routes": "/api/plugins",
+    "ledger": "assets/registry.json",
+    "loader": "src/plugins/installed.generated.ts",
+    "installed": [],
+    "rematerialised": []
+  },
+  "agent": {
+    "id": "expenses-agent",
+    "name": "Ada",
+    "dir": "src/modules/expenses/agent",
+    "skills": [
+      "expenses-overview",
+      "expenses-expense",
+      "expenses-node",
+      "expenses-surface",
+      "expenses-tab",
+      "expenses-tabstrip",
+      "expenses-settings"
+    ],
+    "tools": [
+      "app-health",
+      "capture-task",
+      "describe-module",
+      "expenses-open",
+      "expenses-run",
+      "expenses-settings",
+      "list-agents",
+      "list-commands",
+      "list-menus",
+      "list-modules",
+      "list-points",
+      "open-route",
+      "read-settings",
+      "run-command",
+      "write-setting"
+    ],
+    "cliTools": [
+      "Read",
+      "Grep",
+      "Glob",
+      "WebFetch",
+      "WebSearch"
+    ],
+    "rule": "the app's one default agent; more install as add-on assets (assets/installed/add-on/<id>/agents/*.md) or as plugins through /api/plugins"
+  },
+  "inheritedSubsystems": [
+    "axp-expenses"
+  ],
+  "runtimeFileDeps": [],
+  "persistedPaths": [],
+  "requiredGrants": [],
+  "port": 3200
+}

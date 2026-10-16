@@ -1,0 +1,14 @@
+{
+  "name": "list-points",
+  "description": "The registry report: declared extension points, what contributed to each, and any violations. Use when a pane renders empty — a refused contribution shows up here.",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "moduleId": {
+        "type": "string",
+        "description": "Limit to one module's points."
+      }
+    },
+    "required": []
+  }
+}

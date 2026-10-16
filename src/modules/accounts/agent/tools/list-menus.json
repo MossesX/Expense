@@ -1,0 +1,16 @@
+{
+  "name": "list-menus",
+  "description": "The context-menu rows that compose for an area, in order, with their enabled/checked predicates resolved. Use to answer \"what happens if I right-click here\".",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "area": {
+        "type": "string",
+        "description": "Context area id, e.g. \"taskman.item\"."
+      }
+    },
+    "required": [
+      "area"
+    ]
+  }
+}

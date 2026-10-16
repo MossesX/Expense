@@ -1,0 +1,20 @@
+{
+  "name": "capture-task",
+  "description": "Park a note or task in the Task Manager's capture inbox; it opens as a New item dialog the next time that tab is looked at. Use when the user says \"remind me\" mid-conversation.",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "text": {
+        "type": "string",
+        "description": "The capture, in the user's own words."
+      },
+      "title": {
+        "type": "string",
+        "description": "Optional short title."
+      }
+    },
+    "required": [
+      "text"
+    ]
+  }
+}

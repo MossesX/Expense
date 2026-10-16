@@ -1,0 +1,40 @@
+{
+  "name": "expenses-run",
+  "description": "Run one of Expense Tracker's declared operations. Destructive rows are marked in the description — confirm with the user before running one.",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "command": {
+        "type": "string",
+        "description": "expenses.expense.reconcile-accept — Accept printed total (adjust tax); expenses.expense.trust-lines — Trust the lines (clear printed total); expenses.expense.toggle-reimbursable — Mark / unmark reimbursable; expenses.expense.toggle-disputed — Not my charge (toggle); expenses.expense.copy-line — Copy as a line; expenses.expense.delete — Delete expense (destructive); expenses.expense.delete-selected — Delete selected expenses (destructive); expenses.node.copy-subtotal — Copy this subtotal; expenses.add — Add expense; expenses.tab.float — Float as a window; expenses.tab.dock — Dock back into the strip; expenses.tab.close — Close tab (destructive); expenses.tab.close-others — Close other tabs; expenses.report.new — New report; expenses.report.open — Open report…; expenses.ledger.save — Save ledger…; expenses.ledger.load — Load ledger…; expenses.tabs.restore — Reopen the standard views",
+        "enum": [
+          "expenses.expense.reconcile-accept",
+          "expenses.expense.trust-lines",
+          "expenses.expense.toggle-reimbursable",
+          "expenses.expense.toggle-disputed",
+          "expenses.expense.copy-line",
+          "expenses.expense.delete",
+          "expenses.expense.delete-selected",
+          "expenses.node.copy-subtotal",
+          "expenses.add",
+          "expenses.tab.float",
+          "expenses.tab.dock",
+          "expenses.tab.close",
+          "expenses.tab.close-others",
+          "expenses.report.new",
+          "expenses.report.open",
+          "expenses.ledger.save",
+          "expenses.ledger.load",
+          "expenses.tabs.restore"
+        ]
+      },
+      "data": {
+        "type": "object",
+        "description": "Context the row would have carried — the item, list or selection the command acts on."
+      }
+    },
+    "required": [
+      "command"
+    ]
+  }
+}

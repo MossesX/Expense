@@ -1,0 +1,17 @@
+{
+  "name": "accounts-inspect",
+  "description": "What is currently plugged into Accounts's extension points, and whether anything was refused. Use when one of its panes renders empty.",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "point": {
+        "type": "string",
+        "description": "accounts.admin-tab — Admin suite tab",
+        "enum": [
+          "accounts.admin-tab"
+        ]
+      }
+    },
+    "required": []
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "name": "describe-module",
+  "description": "The full declaration of one module: route, extension points, context areas, settings rows and nav. Use when a question is about a module other than the one on screen.",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "moduleId": {
+        "type": "string",
+        "description": "Module id, e.g. \"taskman\"."
+      }
+    },
+    "required": [
+      "moduleId"
+    ]
+  }
+}

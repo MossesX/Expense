@@ -1,0 +1,9 @@
+{
+  "name": "list-agents",
+  "description": "The assistant roster — every installed agent, where it came from, and which module each is pinned to. Use when the user asks who else they can talk to.",
+  "input_schema": {
+    "type": "object",
+    "properties": {},
+    "required": []
+  }
+}

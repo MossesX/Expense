@@ -1,0 +1,39 @@
+{
+  "name": "accounts-settings",
+  "description": "Read or write Accounts's settings (namespace accounts-settings).",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "action": {
+        "type": "string",
+        "enum": [
+          "read",
+          "write"
+        ],
+        "description": "read every row, or write one."
+      },
+      "key": {
+        "type": "string",
+        "description": "messagePollSeconds — Message poll interval (number); showOfflineMembers — Show offline members (switch); denseTables — Dense tables (switch); floatablePanes — Floatable panes & toolbars (IDE style) (switch); editUi — Edit UI (switch)",
+        "enum": [
+          "messagePollSeconds",
+          "showOfflineMembers",
+          "denseTables",
+          "floatablePanes",
+          "editUi"
+        ]
+      },
+      "value": {
+        "description": "The new value when writing; matches the row's declared kind.",
+        "type": [
+          "boolean",
+          "number",
+          "string"
+        ]
+      }
+    },
+    "required": [
+      "action"
+    ]
+  }
+}

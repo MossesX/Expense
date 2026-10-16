@@ -1,0 +1,8 @@
+# Build context for deploy/expenses/Dockerfile (the peeled app directory).
+node_modules
+.next
+data
+.env
+.env.*
+**/.auth-secret
+*.tsbuildinfo
