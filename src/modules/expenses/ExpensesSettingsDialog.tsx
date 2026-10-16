@@ -30,6 +30,8 @@ import Tabs from "@mui/material/Tabs";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 
+import AiSettingsPanel from "./assistant/AiSettingsPanel";
+
 import { token } from "@axf/core";
 import type { SettingRow, SettingValue } from "@axf/core";
 
@@ -112,6 +114,7 @@ export default function ExpensesSettingsDialog({ open, onClose }: { open: boolea
         ) : section ? (
           <Stack spacing={1.6}>
             <Typography sx={{ fontSize: 12, color: token("dim") }}>{section.blurb}</Typography>
+            {section.id === "ai" && <AiSettingsPanel />}
             {section.keys.map((key) => {
               const row = ROWS.get(key);
               if (!row) return null;

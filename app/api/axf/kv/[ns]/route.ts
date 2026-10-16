@@ -25,7 +25,10 @@ type RouteCtx = { params: Promise<{ ns: string }> };
 
 async function nsOf(ctx: RouteCtx): Promise<string | null> {
   const { ns } = await ctx.params;
-  return isKvName(ns) ? ns : null;
+  // A `*-secret` namespace is server-side only (an API key, say): it is
+  // written and masked by its own route and never served raw here.
+  if (!isKvName(ns) || ns.endsWith("-secret")) return null;
+  return ns;
 }
 
 export async function GET(request: Request, ctx: RouteCtx): Promise<Response> {

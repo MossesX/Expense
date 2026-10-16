@@ -40,7 +40,21 @@ ENV NODE_ENV=production \
 RUN groupadd --system --gid 1001 nodejs && \
     useradd --system --uid 1001 --gid nodejs nextjs && \
     mkdir -p /home/nextjs && chown nextjs:nodejs /home/nextjs
+# The assistant (src/server/ai): git for its patch workspace, ripgrep for
+# Claude Code's search, and Claude Code's CLI for the subscription backend.
+RUN apt-get update && apt-get install -y --no-install-recommends git ripgrep ca-certificates && rm -rf /var/lib/apt/lists/* \
+    && npm i -g @anthropic-ai/claude-code && npm cache clean --force
 COPY --from=build --chown=nextjs:nodejs /app /app
+# The assistant's codebase knowledge: a source snapshot (no build output) it
+# reads in Chat mode and copies into a per-user workspace in Edit/Build modes.
+ARG SOURCE_VERSION=dev
+ENV SOURCE_DIR=/app/source
+RUN mkdir -p /app/source && cd /app && \
+    for p in app src vendor proxy.ts package.json package-lock.json tsconfig.json next.config.ts next-env.d.ts README.md Dockerfile docker-compose.yml .dockerignore .github scripts; do \
+      [ -e "$p" ] && cp -r "$p" /app/source/ || true; \
+    done && \
+    rm -rf /app/source/vendor/axf-core/node_modules && \
+    echo "$SOURCE_VERSION" > /app/source/.source-version
 RUN mkdir -p /data /app/assets && chown -R nextjs:nodejs /data /app
 VOLUME ["/data"]
 USER nextjs

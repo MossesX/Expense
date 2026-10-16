@@ -61,7 +61,13 @@ const BANNER = defineToolbar({
     { kind: "label", id: "app", text: "Expense Tracker", tone: "accent" },
     { kind: "label", id: "peel", text: "peeled · @axf/core 0.0.25", tone: "dim" },
     { kind: "spacer", id: "gap" },
-    { kind: "slot", id: "context" }
+    { kind: "slot", id: "context" },
+    // The settings gear in the BANNER (owner, 2026-10-16: "settings interface
+    // accessed by icon in banner and context menu") — fires the module's own
+    // command, so the banner, the header gear, the shell gear and the
+    // right-click row all open the same tabbed dialog.
+    { kind: "action", id: "assistant", glyph: "icon-sparkle", title: "Assistant (Ctrl/⌘ J)", command: "expenses.assistant.open" },
+    { kind: "action", id: "settings", glyph: "icon-gear", title: "Settings", command: "expenses.settings.open" }
   ]
 });
 

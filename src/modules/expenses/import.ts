@@ -434,6 +434,36 @@ export function parseImport(text: string, opts: ParseOptions = {}): ParseResult 
   return { rows, problems };
 }
 
+/** A transaction as the image-parse route returns it. */
+export interface ParsedTransaction {
+  readonly date: string;
+  readonly merchant: string;
+  readonly amount: number;
+  readonly kind: ExpenseKind;
+  readonly category?: string;
+  readonly payment?: boolean;
+}
+
+/** Rows from a parsed image — the same shape a paste produces, so the judge
+ *  and the entry builder do not know where a row came from. */
+export function rowsFromParsed(list: readonly ParsedTransaction[], opts: ParseOptions = {}): ParseResult {
+  const rows: ImportRow[] = [];
+  const problems: ParseProblem[] = [];
+  list.forEach((t, i) => {
+    const line = i + 1;
+    const date = parseDate(String(t.date ?? ""), opts);
+    if (!date) return void problems.push({ line, text: `${t.date} ${t.merchant} ${t.amount}`, reason: "no date" });
+    const merchant = String(t.merchant ?? "").trim();
+    if (!merchant) return void problems.push({ line, text: `${t.date} ${t.amount}`, reason: "no merchant" });
+    const cents = Math.round(Math.abs(Number(t.amount)) * 100);
+    if (!Number.isFinite(cents) || cents === 0) return void problems.push({ line, text: `${t.date} ${t.merchant}`, reason: "no amount" });
+    const signed = t.kind === "income" ? -cents : cents;
+    const row = makeRow(line, date, merchant, signed, String(t.category ?? ""));
+    rows.push(t.payment ? { ...row, payment: true, category: categoryFor(row.merchant, row.bankCategory, row.kind, true) } : row);
+  });
+  return { rows, problems };
+}
+
 function flipKinds(rows: ImportRow[]): void {
   for (let i = 0; i < rows.length; i++) {
     const r = rows[i];

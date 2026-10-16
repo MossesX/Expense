@@ -68,9 +68,12 @@ import EmptyTabState from "./EmptyTabState";
 import ExpenseWindows from "./ExpenseWindows";
 import ExpensesSettingsDialog from "./ExpensesSettingsDialog";
 import FilterDialog from "./FilterDialog";
+import ImageImportDialog from "./ImageImportDialog";
 import ImportDialog from "./ImportDialog";
 import PaydayDialog from "./PaydayDialog";
 import WelcomeDialog from "./WelcomeDialog";
+import AssistantPanel from "./assistant/AssistantPanel";
+import { assistantUi, pageContext } from "./assistant/client";
 import TabContent from "./TabContent";
 import TabGroup from "./TabGroup";
 import VaultDialog from "./VaultDialog";
@@ -120,6 +123,18 @@ export default function ExpensesModule() {
   const docked = tabs.filter((t) => t.window === null);
   const floating = tabs.filter((t) => t.window !== null);
   const active = docked.find((t) => t.id === activeId) ?? null;
+
+  /* ------------------------------------------------- Ctrl/⌘ J: the assistant */
+  React.useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "j" && !e.repeat) {
+        e.preventDefault();
+        assistantUi.open({ context: pageContext() });
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
 
   /* ------------------------------------------------------------ the Del key */
   React.useEffect(() => {
@@ -313,6 +328,11 @@ export default function ExpensesModule() {
             Import
           </Button>
         </Tooltip>
+        <Tooltip title="Read transactions from a photo or screenshot of a statement — duplicates are shown side by side before anything is written.">
+          <Button size="small" variant="outlined" onClick={() => expenseUi.openScan()} startIcon={<Glyph id="icon-image" size={14} />}>
+            Scan image
+          </Button>
+        </Tooltip>
         <Tooltip title={selected.size ? `Delete ${selected.size} selected — you will see them first` : "Select rows to delete them"}>
           <span>
             <IconButton
@@ -442,6 +462,10 @@ export default function ExpensesModule() {
       <PaydayDialog open={ui.payday} expenses={list} onClose={() => expenseUi.closePayday()} />
 
       <ImportDialog open={ui.importing} expenses={list} onClose={() => expenseUi.closeImport()} />
+
+      <ImageImportDialog open={ui.scanning} expenses={list} onClose={() => expenseUi.closeScan()} />
+
+      <AssistantPanel />
 
       <DeleteSelectedDialog open={ui.deleting} expenses={list} onClose={() => expenseUi.closeDeleteSelected()} />
 

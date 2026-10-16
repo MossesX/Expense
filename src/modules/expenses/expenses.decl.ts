@@ -116,7 +116,13 @@ export const EXPENSES_DECL: ModuleDecl = {
       "expenses.surface": [
         { id: "add", label: "Add expense", command: "expenses.add", order: 10 },
         { id: "add-income", label: "Add income", command: "expenses.income.add", order: 20 },
-        { id: "paydays", label: "Paydays…", command: "expenses.payday.open", order: 30 }
+        { id: "paydays", label: "Paydays…", command: "expenses.payday.open", order: 30 },
+        // On the SURFACE — the outermost area — so a right-click anywhere in
+        // the module offers them (owner, 2026-10-16: "settings interface
+        // accessed by icon in banner and context menu").
+        { id: "sep-ai", label: "", role: "separator", order: 80 },
+        { id: "ask-assistant", label: "Ask the assistant…", command: "expenses.assistant.ask", order: 81 },
+        { id: "settings", label: "Settings…", command: "expenses.settings.open", order: 82 }
       ],
       "expenses.tab": [
         { id: "float", label: "Float as a window", command: "expenses.tab.float", order: 10 },
@@ -132,9 +138,9 @@ export const EXPENSES_DECL: ModuleDecl = {
         { id: "save-ledger", label: "Save ledger…", command: "expenses.ledger.save", order: 40 },
         { id: "load-ledger", label: "Load ledger…", command: "expenses.ledger.load", order: 50 },
         { id: "import-ledger", label: "Import transactions…", command: "expenses.ledger.import", order: 55 },
+        { id: "scan-image", label: "Scan statement image…", command: "expenses.ledger.scan-image", order: 56 },
         { id: "sep-filter", label: "", role: "separator", order: 57 },
         { id: "advanced-filter", label: "Advanced filter…", command: "expenses.filter.advanced", order: 58 },
-        { id: "settings", label: "Settings…", command: "expenses.settings.open", order: 59 },
         { id: "sep-2", label: "", role: "separator", order: 60 },
         { id: "restore", label: "Reopen the standard views", command: "expenses.tabs.restore", order: 70 }
       ]
@@ -464,6 +470,39 @@ export const EXPENSES_DECL: ModuleDecl = {
         min: 0,
         max: 50,
         step: 0.5
+      },
+      {
+        key: "extraAccounts",
+        label: "Extra accounts",
+        hint: "Comma-separated account names beyond the built-in ones, offered wherever an account is chosen. The image import's “add new account” writes here.",
+        kind: "text",
+        defaultValue: ""
+      },
+      /* ---- AI ---- */
+      {
+        key: "aiMode",
+        label: "Claude connection",
+        hint: "Auto tries your own API key first, then the server's credential (a Claude subscription signed in on the host, or its ANTHROPIC_API_KEY). Choose one to use it alone.",
+        kind: "select",
+        defaultValue: "auto",
+        options: [
+          { value: "auto", label: "My key, then the server" },
+          { value: "server", label: "Server only (subscription / server key)" },
+          { value: "user-key", label: "My API key only" }
+        ]
+      },
+      {
+        key: "aiModel",
+        label: "Model",
+        hint: "Which Claude reads images and answers the assistant.",
+        kind: "select",
+        defaultValue: "claude-opus-5-5",
+        options: [
+          { value: "claude-opus-5-5", label: "Claude Opus 5.5 (default)" },
+          { value: "claude-sonnet-5-5", label: "Claude Sonnet 5.5 (faster)" },
+          { value: "claude-haiku-5-5", label: "Claude Haiku 5.5 (cheapest)" },
+          { value: "claude-fable-5-1", label: "Claude Fable 5.1 (most capable)" }
+        ]
       }
     ]
   },
