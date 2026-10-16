@@ -31,6 +31,8 @@ import Typography from "@mui/material/Typography";
 
 import { token } from "@axf/core";
 
+import { useExpensesSettings } from "./settings";
+
 import { MONO, StatTile } from "./bits";
 import { categoryOf, isIncome, type Expense } from "./types";
 import {
@@ -54,7 +56,13 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 export function Statements({ expenses }: { expenses: Expense[] }) {
+  const prefs = useExpensesSettings();
   const [kind, setKind] = React.useState<PeriodKind>("month");
+  React.useEffect(() => {
+    if (prefs.statementPeriod === "month" || prefs.statementPeriod === "quarter" || prefs.statementPeriod === "year") {
+      setKind(prefs.statementPeriod);
+    }
+  }, [prefs.statementPeriod]);
   const periods = React.useMemo(() => periodsIn(expenses, kind), [expenses, kind]);
   const [key, setKey] = React.useState<string | null>(null);
 

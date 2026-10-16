@@ -131,6 +131,10 @@ export const EXPENSES_DECL: ModuleDecl = {
         { id: "sep-1", label: "", role: "separator", order: 30 },
         { id: "save-ledger", label: "Save ledger…", command: "expenses.ledger.save", order: 40 },
         { id: "load-ledger", label: "Load ledger…", command: "expenses.ledger.load", order: 50 },
+        { id: "import-ledger", label: "Import transactions…", command: "expenses.ledger.import", order: 55 },
+        { id: "sep-filter", label: "", role: "separator", order: 57 },
+        { id: "advanced-filter", label: "Advanced filter…", command: "expenses.filter.advanced", order: 58 },
+        { id: "settings", label: "Settings…", command: "expenses.settings.open", order: 59 },
         { id: "sep-2", label: "", role: "separator", order: 60 },
         { id: "restore", label: "Reopen the standard views", command: "expenses.tabs.restore", order: 70 }
       ]
@@ -147,13 +151,143 @@ export const EXPENSES_DECL: ModuleDecl = {
   settings: {
     ns: "expenses-settings",
     rows: [
+      /* ---- general ---- */
       {
         key: "confirmDelete",
         label: "Confirm deletes",
-        hint: "Ask before deleting an expense. There is no undo in this store.",
+        hint: "Show the selected rows and ask before deleting. There is no undo in this store.",
         kind: "switch",
         defaultValue: true
       },
+      {
+        key: "defaultAccount",
+        label: "Default account",
+        hint: "The Account column a new expense starts with.",
+        kind: "select",
+        defaultValue: "",
+        options: [
+          { value: "", label: "None" },
+          { value: "Discover", label: "Discover" },
+          { value: "Capital One", label: "Capital One" },
+          { value: "Cash App", label: "Cash App" },
+          { value: "Venmo", label: "Venmo" },
+          { value: "Cash", label: "Cash" },
+          { value: "Drawer", label: "Drawer" }
+        ]
+      },
+      {
+        key: "defaultCategory",
+        label: "Default category",
+        hint: "The category a new expense starts with.",
+        kind: "select",
+        defaultValue: "other",
+        options: [
+          { value: "fuel", label: "Fuel & convenience" },
+          { value: "groceries", label: "Groceries" },
+          { value: "dining", label: "Dining & takeout" },
+          { value: "transfers", label: "Transfers & loans" },
+          { value: "personal", label: "Personal care" },
+          { value: "clothing", label: "Clothing" },
+          { value: "software", label: "Software & subscriptions" },
+          { value: "utilities", label: "Phone & utilities" },
+          { value: "transport", label: "Transport" },
+          { value: "hardware", label: "Hardware & auto" },
+          { value: "health", label: "Health & pharmacy" },
+          { value: "pending", label: "Pending / uncleared" },
+          { value: "other", label: "Other" }
+        ]
+      },
+      {
+        key: "startView",
+        label: "Open on",
+        hint: "Which view is active when the ledger opens.",
+        kind: "select",
+        defaultValue: "remember",
+        options: [
+          { value: "remember", label: "Whatever was open" },
+          { value: "grid", label: "Grid" },
+          { value: "tree", label: "Tree" },
+          { value: "statements", label: "Statements" }
+        ]
+      },
+      {
+        key: "toastSeconds",
+        label: "Toast duration (s)",
+        hint: "How long a confirmation message stays at the bottom of the screen.",
+        kind: "number",
+        defaultValue: 4,
+        min: 1,
+        max: 30,
+        step: 1
+      },
+      /* ---- grid & filter ---- */
+      {
+        key: "showHints",
+        label: "Show grid hints",
+        hint: "The line under the buttons explaining arithmetic amounts, selection and the Del key.",
+        kind: "switch",
+        defaultValue: true
+      },
+      {
+        key: "denseRows",
+        label: "Dense rows",
+        hint: "Tighter grid rows — more on screen, less air.",
+        kind: "switch",
+        defaultValue: false
+      },
+      {
+        key: "defaultSort",
+        label: "Default sort",
+        hint: "The column the grid sorts by when it opens.",
+        kind: "select",
+        defaultValue: "date",
+        options: [
+          { value: "date", label: "Date" },
+          { value: "merchant", label: "Merchant" },
+          { value: "category", label: "Category" },
+          { value: "payment", label: "Account" },
+          { value: "total", label: "Total" },
+          { value: "balance", label: "Balance" }
+        ]
+      },
+      {
+        key: "defaultSortDir",
+        label: "Default sort direction",
+        hint: "Newest or largest first, or the other way round.",
+        kind: "select",
+        defaultValue: "desc",
+        options: [
+          { value: "desc", label: "Descending" },
+          { value: "asc", label: "Ascending" }
+        ]
+      },
+      {
+        key: "filterMatchAll",
+        label: "Filter needs every word",
+        hint: "On: a row must contain every word typed. Off: any one word is enough.",
+        kind: "switch",
+        defaultValue: true
+      },
+      {
+        key: "filterColumns",
+        label: "Filter columns",
+        hint: "Comma-separated column ids the filter searches. Empty = every column. The advanced filter dialog edits this with switches.",
+        kind: "text",
+        defaultValue: ""
+      },
+      {
+        key: "statementPeriod",
+        label: "Statement period",
+        hint: "The period the Statements view opens on.",
+        kind: "select",
+        defaultValue: "month",
+        options: [
+          { value: "month", label: "Month" },
+          { value: "quarter", label: "Quarter" },
+          { value: "year", label: "Year" }
+        ]
+      },
+      /* ---- paydays ---- */
       {
         key: "paydayAmount",
         label: "Payday amount ($)",
@@ -167,7 +301,7 @@ export const EXPENSES_DECL: ModuleDecl = {
       {
         key: "paydayEvery",
         label: "Paid every",
-        hint: "How often a payday lands, counted from the first payday below.",
+        hint: "How often a payday lands.",
         kind: "select",
         defaultValue: "biweekly",
         options: [
@@ -178,9 +312,42 @@ export const EXPENSES_DECL: ModuleDecl = {
         ]
       },
       {
+        key: "paydayWeekday",
+        label: "Payday is a",
+        hint: "The day of the week a weekly or two-weekly payday lands on.",
+        kind: "select",
+        defaultValue: "5",
+        options: [
+          { value: "0", label: "Sunday" },
+          { value: "1", label: "Monday" },
+          { value: "2", label: "Tuesday" },
+          { value: "3", label: "Wednesday" },
+          { value: "4", label: "Thursday" },
+          { value: "5", label: "Friday" },
+          { value: "6", label: "Saturday" }
+        ]
+      },
+      {
+        key: "paydayDayOfMonth",
+        label: "Day of the month",
+        hint: "For a monthly schedule. Short months clamp to their last day.",
+        kind: "number",
+        defaultValue: 1,
+        min: 1,
+        max: 31,
+        step: 1
+      },
+      {
         key: "paydayAnchor",
-        label: "First payday (YYYY-MM-DD)",
-        hint: "Any past payday. Paydays are generated from this date forward.",
+        label: "A known payday (YYYY-MM-DD)",
+        hint: "Two-weekly only: settles which week. The Paydays dialog picks it from the last two occurrences of the weekday.",
+        kind: "text",
+        defaultValue: ""
+      },
+      {
+        key: "paydaySince",
+        label: "Generate since (YYYY-MM-DD)",
+        hint: "Paydays before this date are never added. Empty = the ledger's earliest entry.",
         kind: "text",
         defaultValue: ""
       },
@@ -190,6 +357,113 @@ export const EXPENSES_DECL: ModuleDecl = {
         hint: "Shown in the Merchant column of every generated payday.",
         kind: "text",
         defaultValue: "Payday"
+      },
+      /* ---- welcome ---- */
+      {
+        key: "welcomeEnabled",
+        label: "Welcome dialog",
+        hint: "Show a welcome dialog once per sign-in with the sections ticked below.",
+        kind: "switch",
+        defaultValue: true
+      },
+      {
+        key: "welcomeMissingPaydays",
+        label: "Missing paydays",
+        hint: "List paydays through today the ledger does not hold, each with a switch, and add the ticked ones.",
+        kind: "switch",
+        defaultValue: true
+      },
+      {
+        key: "welcomeMonthSummary",
+        label: "This month so far",
+        hint: "Spent, income and net for the current month.",
+        kind: "switch",
+        defaultValue: true
+      },
+      {
+        key: "welcomeNextPayday",
+        label: "Next payday",
+        hint: "When the next payday lands and how many days away it is.",
+        kind: "switch",
+        defaultValue: true
+      },
+      {
+        key: "welcomeOverBudget",
+        label: "Categories over budget",
+        hint: "Categories whose spending this month passed their budget.",
+        kind: "switch",
+        defaultValue: true
+      },
+      {
+        key: "welcomeTopCategories",
+        label: "Top categories",
+        hint: "The three categories with the most spending this month.",
+        kind: "switch",
+        defaultValue: false
+      },
+      {
+        key: "welcomeUnreconciled",
+        label: "Unreconciled receipts",
+        hint: "Entries whose printed total disagrees with their lines.",
+        kind: "switch",
+        defaultValue: false
+      },
+      {
+        key: "welcomeDisputed",
+        label: "Disputed charges",
+        hint: "Entries marked “not my charge”.",
+        kind: "switch",
+        defaultValue: false
+      },
+      {
+        key: "welcomeRecentImports",
+        label: "Recent imports",
+        hint: "How many entries the last seven days of imports added.",
+        kind: "switch",
+        defaultValue: false
+      },
+      /* ---- import ---- */
+      {
+        key: "importAccount",
+        label: "Import account",
+        hint: "The account the import dialog starts on.",
+        kind: "select",
+        defaultValue: "Capital One",
+        options: [
+          { value: "Discover", label: "Discover" },
+          { value: "Capital One", label: "Capital One" },
+          { value: "Cash App", label: "Cash App" },
+          { value: "Venmo", label: "Venmo" },
+          { value: "Cash", label: "Cash" },
+          { value: "Drawer", label: "Drawer" }
+        ]
+      },
+      {
+        key: "importSkipPayments",
+        label: "Leave card payments unticked",
+        hint: "A payment to the card is neither spending nor income; ticking one files it under Transfers.",
+        kind: "switch",
+        defaultValue: true
+      },
+      {
+        key: "importDateSlack",
+        label: "Duplicate date slack (days)",
+        hint: "How far apart two dates may be and still count as the same purchase — posting usually trails buying by a day or two.",
+        kind: "number",
+        defaultValue: 4,
+        min: 0,
+        max: 14,
+        step: 1
+      },
+      {
+        key: "importAmountSlack",
+        label: "Duplicate amount slack ($)",
+        hint: "How far apart two amounts may be, with the same merchant and close dates, and still count as one purchase.",
+        kind: "number",
+        defaultValue: 1,
+        min: 0,
+        max: 50,
+        step: 0.5
       }
     ]
   },

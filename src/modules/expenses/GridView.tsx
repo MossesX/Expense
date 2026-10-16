@@ -58,6 +58,7 @@ import { Glyph, token } from "@axf/core";
 import { KindChip, MONO, MoneyCell, PaymentCell, SourceChip, StatTile, TextCell, autoDashIso, capitalizeWords } from "./bits";
 import { CARDS, useHiddenCards, type CardId } from "./cards";
 import { expenseSelection, useExpenseSelection } from "./selection";
+import { useExpensesSettings } from "./settings";
 import { CATEGORIES, INCOME_CATEGORY, isIncome, type Expense, type LineItem } from "./types";
 import {
   effectiveTotal,
@@ -232,8 +233,17 @@ export function GridView({
    *  are page furniture and eat a small window's whole height. */
   compact?: boolean;
 }) {
+  const prefs = useExpensesSettings();
   const [sortKey, setSortKey] = React.useState<SortKey>("date");
   const [sortDir, setSortDir] = React.useState<"asc" | "desc">("desc");
+  // The default sort is a setting (2026-10-16); it lands after the settings
+  // doc loads and again whenever it is changed, which is also what makes the
+  // settings dialog's change visible at once.
+  React.useEffect(() => {
+    const keys: SortKey[] = ["date", "kind", "merchant", "category", "payment", "subtotal", "tax", "stated", "recon", "total", "balance"];
+    if (keys.includes(prefs.defaultSort as SortKey)) setSortKey(prefs.defaultSort as SortKey);
+    setSortDir(prefs.defaultSortDir === "asc" ? "asc" : "desc");
+  }, [prefs.defaultSort, prefs.defaultSortDir]);
   const [openRows, setOpenRows] = React.useState<Record<string, boolean>>({});
   const selected = useExpenseSelection();
   const cards = useHiddenCards();
@@ -331,7 +341,7 @@ export function GridView({
     </TableCell>
   );
 
-  const cell = { py: 0.3, borderColor: token("edge") } as const;
+  const cell = { py: prefs.denseRows ? 0 : 0.3, borderColor: token("edge") } as const;
 
   /** Display order — what a shift-click range is taken along. */
   const order = React.useMemo(() => sorted.map((r) => r.id), [sorted]);
@@ -426,7 +436,7 @@ export function GridView({
             </Button>
           </>
         ) : null}
-        {!compact && (
+        {!compact && prefs.showHints && (
           <Typography variant="caption" sx={{ color: token("dim") }}>
             Click any cell to edit. Amount fields accept arithmetic — <code>12.99*3</code>, <code>40+8.50</code>.
             Tick rows to select (shift for a range) and press <code>Del</code>; right-click a row for its
