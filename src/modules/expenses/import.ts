@@ -448,6 +448,13 @@ export const DATE_SLACK_DAYS = 4;
 export const AMOUNT_SLACK_CENTS = 100;
 export const MERCHANT_SIMILAR = 0.5;
 
+export interface JudgeOptions {
+  /** Days two dates may differ and still be one purchase. */
+  readonly dateSlackDays?: number;
+  /** Cents two amounts may differ, with a similar merchant and close dates. */
+  readonly amountSlackCents?: number;
+}
+
 export type DuplicateCheck =
   | "exact"
   | "posting-drift"
@@ -486,7 +493,12 @@ function hash36(s: string): string {
 export const fingerprintId = (row: ImportRow, seq = 0): string =>
   `imp_${hash36(`${row.date}|${row.cents}|${row.kind}|${normalizeMerchant(row.merchant)}|${seq}`)}`;
 
-function against(row: ImportRow, e: Expense): { check: DuplicateCheck; reason: string } | null {
+function against(
+  row: ImportRow,
+  e: Expense,
+  dateSlack: number,
+  amountSlack: number
+): { check: DuplicateCheck; reason: string } | null {
   if (kindOf(e) !== row.kind) return null;
   if (e.id === fingerprintId(row)) return { check: "fingerprint", reason: "this exact row was imported before" };
   const cents = effectiveTotal(e);
@@ -496,13 +508,13 @@ function against(row: ImportRow, e: Expense): { check: DuplicateCheck; reason: s
   const days = daysBetween(row.date, e.date);
   const similar = sim >= MERCHANT_SIMILAR;
   if (sameAmount && days === 0 && similar) return { check: "exact", reason: "same date, amount and merchant" };
-  if (sameAmount && similar && days <= DATE_SLACK_DAYS)
+  if (sameAmount && similar && days <= dateSlack)
     return { check: "posting-drift", reason: `same amount and merchant, ${days} day${days === 1 ? "" : "s"} apart` };
   if (sameAmount && days === 0)
     return { check: "merchant-rewrite", reason: `same date and amount as “${e.merchant}”` };
-  if (similar && days <= DATE_SLACK_DAYS) {
+  if (similar && days <= dateSlack) {
     const diff = Math.abs(cents - row.cents);
-    const within = diff <= AMOUNT_SLACK_CENTS || (e.tip > 0 && diff <= Math.round(row.cents * 0.25));
+    const within = diff <= amountSlack || (e.tip > 0 && diff <= Math.round(row.cents * 0.25));
     if (within) return { check: "tip-or-rounding", reason: `same merchant within ${days} day${days === 1 ? "" : "s"}, amount differs by ${(diff / 100).toFixed(2)}` };
   }
   return null;
@@ -514,13 +526,15 @@ function against(row: ImportRow, e: Expense): { check: DuplicateCheck; reason: s
  * only, so of two identical pasted rows the first is "new" and the second is
  * "repeated in paste".
  */
-export function judge(rows: readonly ImportRow[], existing: readonly Expense[]): Verdict[] {
+export function judge(rows: readonly ImportRow[], existing: readonly Expense[], opts: JudgeOptions = {}): Verdict[] {
+  const dateSlack = Math.max(0, opts.dateSlackDays ?? DATE_SLACK_DAYS);
+  const amountSlack = Math.max(0, opts.amountSlackCents ?? AMOUNT_SLACK_CENTS);
   const out: Verdict[] = [];
   const kept: ImportRow[] = [];
   for (const row of rows) {
     let verdict: Verdict | null = null;
     for (const e of existing) {
-      const hit = against(row, e);
+      const hit = against(row, e, dateSlack, amountSlack);
       if (hit) { verdict = { row, duplicateOf: e, check: hit.check, reason: hit.reason }; break; }
     }
     if (!verdict) {

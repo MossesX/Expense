@@ -44,6 +44,7 @@ import { MONO } from "./bits";
 import { judge, parseImport, toExpenses } from "./import";
 import type { Verdict } from "./import";
 import { money } from "./math";
+import { useExpensesSettings } from "./settings";
 import { expenseStore } from "./store";
 import { PAYMENT_METHODS, categoryOf, type Expense } from "./types";
 import { expenseUi } from "./ui";
@@ -79,6 +80,7 @@ export default function ImportDialog({
   expenses: readonly Expense[];
   onClose: () => void;
 }) {
+  const prefs = useExpensesSettings();
   const [text, setText] = React.useState("");
   const [method, setMethod] = React.useState("Capital One");
   const [year, setYear] = React.useState(String(new Date().getFullYear()));
@@ -91,19 +93,24 @@ export default function ImportDialog({
   React.useEffect(() => {
     if (!open) return;
     setText("");
+    setMethod(prefs.importAccount || "Capital One");
     setVerdicts(null);
     setProblems([]);
     setTicked(new Set());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   const review = () => {
     const y = /^\d{4}$/.test(year.trim()) ? Number(year.trim()) : undefined;
     const parsed = parseImport(text, { year: y });
-    const judged = judge(parsed.rows, expenses);
+    const judged = judge(parsed.rows, expenses, {
+      dateSlackDays: prefs.importDateSlack,
+      amountSlackCents: Math.round(prefs.importAmountSlack * 100)
+    });
     setProblems(parsed.problems);
     setVerdicts(judged);
-    // Default ticks: new rows yes, duplicates no, card payments no.
-    setTicked(new Set(judged.filter((v) => !v.check && !v.row.payment).map((v) => v.row.line)));
+    // Default ticks: new rows yes, duplicates no, card payments per the setting.
+    setTicked(new Set(judged.filter((v) => !v.check && !(prefs.importSkipPayments && v.row.payment)).map((v) => v.row.line)));
   };
 
   const onFile = (file: File | null) => {

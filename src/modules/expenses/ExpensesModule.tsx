@@ -53,28 +53,40 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
 import Snackbar from "@mui/material/Snackbar";
+import IconButton from "@mui/material/IconButton";
+import InputAdornment from "@mui/material/InputAdornment";
 import Stack from "@mui/material/Stack";
+import TextField from "@mui/material/TextField";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 
-import { Glyph, commands, token } from "@axf/core";
+import { Glyph, commands, settingsUi, token } from "@axf/core";
 
 import { MONO } from "./bits";
+import DeleteSelectedDialog from "./DeleteSelectedDialog";
 import EmptyTabState from "./EmptyTabState";
 import ExpenseWindows from "./ExpenseWindows";
+import ExpensesSettingsDialog from "./ExpensesSettingsDialog";
+import FilterDialog from "./FilterDialog";
 import ImportDialog from "./ImportDialog";
 import PaydayDialog from "./PaydayDialog";
+import WelcomeDialog from "./WelcomeDialog";
 import TabContent from "./TabContent";
 import TabGroup from "./TabGroup";
 import VaultDialog from "./VaultDialog";
 import { newReportTab } from "./expenses.commands";
+import { applyFilter, filterActive, parseColumns, type FilterSpec } from "./filter";
 import { money, net, sumIncome, sumSpent } from "./math";
+import { DEFAULT_SETTINGS, paySchedule, useExpensesSettings, type ExpensesSettings } from "./settings";
 import { expenseSelection, useExpenseSelection } from "./selection";
-import { blankExpense, blankIncome, useExpenses } from "./store";
+import { blankExpense, blankIncome, expenseStore, useExpenses } from "./store";
 import { expenseTabs, useExpenseTabs } from "./tabs";
 import { expenseUi, useExpensesUi } from "./ui";
 import { isIncome, type Expense } from "./types";
 import type { VaultFile } from "./vault";
+import { buildWelcome, welcomeHasContent } from "./welcome";
+
+import { WELCOMED_PREFIX } from "./welcomeMarker";
 
 /** True when the keystroke belongs to something being typed into. */
 function isTyping(target: EventTarget | null): boolean {
@@ -89,6 +101,15 @@ export default function ExpensesModule() {
   const { tabs, activeId } = useExpenseTabs();
   const selected = useExpenseSelection();
   const ui = useExpensesUi();
+  const prefs = useExpensesSettings();
+
+  /* ------------------------------------------------------------- the filter */
+  const filterSpec = React.useMemo<FilterSpec>(
+    () => ({ text: ui.filterText, columns: parseColumns(prefs.filterColumns), matchAll: prefs.filterMatchAll }),
+    [ui.filterText, prefs.filterColumns, prefs.filterMatchAll]
+  );
+  const filtering = filterActive(filterSpec);
+  const shown = React.useMemo(() => (filtering ? applyFilter(list, filterSpec) : list), [list, filterSpec, filtering]);
 
   const spent = sumSpent(list);
   const income = sumIncome(list);
@@ -124,11 +145,94 @@ export default function ExpensesModule() {
   /* ----------------------------------------------------------------- toasts */
   React.useEffect(() => {
     if (!ui.toast) return;
-    const timer = window.setTimeout(() => expenseUi.clearToast(), 4000);
+    const timer = window.setTimeout(() => expenseUi.clearToast(), Math.max(1, prefs.toastSeconds) * 1000);
     return () => window.clearTimeout(timer);
-  }, [ui.toast]);
+  }, [ui.toast, prefs.toastSeconds]);
 
-  const onAdd = React.useCallback(() => add(blankExpense()), [add]);
+  /* ------------------------------------------- the shell's gear opens OURS */
+  // Core's SettingsDialog is a flat list of every row; this module's is tabbed
+  // (ExpensesSettingsDialog). The ModuleHost gear and the universal "Module
+  // settings" row open core's by owner id — intercept that and open ours.
+  React.useEffect(() => {
+    const check = () => {
+      if (settingsUi.openFor() === "expenses") {
+        settingsUi.close();
+        expenseUi.openSettings();
+      }
+    };
+    check();
+    return settingsUi.subscribe(check);
+  }, []);
+
+  /* ------------------------------------------------ start view + welcome */
+  // Once per sign-in per tab, after the ledger has loaded: the start view the
+  // settings name, then the welcome dialog if it has anything to say. The
+  // marker is keyed by user and cleared when the session signs out, so the
+  // next sign-in in the same tab is welcomed again.
+  const welcomed = React.useRef(false);
+  const [welcomeUser, setWelcomeUser] = React.useState<string | null>(null);
+  React.useEffect(() => {
+    if (!ready || welcomed.current) return;
+    welcomed.current = true;
+    let cancelled = false;
+    void (async () => {
+      // Both read HERE rather than off a hook. The settings hook answers
+      // defaults until core's store has loaded, and that load races the
+      // ledger's — a welcome built on defaults would say "no pay schedule" to
+      // someone who has one. And core's session store is only flipped by the
+      // Accounts screen, which this route never mounts, so WHO is signed in
+      // comes from the accounts whoami route, the same answer the gate used.
+      let stored: Partial<ExpensesSettings> = {};
+      let user: string | null = null;
+      try {
+        const [settingsRes, whoRes] = await Promise.all([
+          fetch("/api/axf/kv/expenses-settings", { cache: "no-store" }),
+          fetch("/api/accounts/session", { cache: "no-store" })
+        ]);
+        if (settingsRes.ok) {
+          const body = (await settingsRes.json()) as { doc?: { settings?: Partial<ExpensesSettings> } };
+          stored = body.doc?.settings ?? {};
+        }
+        if (whoRes.ok) {
+          const body = (await whoRes.json()) as { signedIn?: boolean; me?: { username?: string; screenname?: string } };
+          if (body.signedIn && body.me) user = body.me.screenname || body.me.username || null;
+        }
+      } catch {
+        /* unreachable routes — defaults, which still welcome */
+      }
+      if (cancelled) return;
+      setWelcomeUser(user);
+      const current: ExpensesSettings = { ...DEFAULT_SETTINGS, ...stored };
+      if (current.startView !== "remember" && ["grid", "tree", "statements"].includes(current.startView)) {
+        expenseTabs.activate(current.startView);
+      }
+      if (!current.welcomeEnabled) return;
+      const key = `${WELCOMED_PREFIX}${user ?? "local"}`;
+      try {
+        if (window.sessionStorage.getItem(key)) return;
+        window.sessionStorage.setItem(key, "1");
+      } catch {
+        /* storage blocked — welcome every load, which is the honest fallback */
+      }
+      const model = buildWelcome(expenseStore.getState().list, current, paySchedule(current));
+      if (welcomeHasContent(model, current)) expenseUi.openWelcome();
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // Deliberately on readiness only: the welcome is a sign-in event, not a
+    // reaction to every later change of the list or the settings.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready]);
+
+  const onAdd = React.useCallback(() => {
+    const e = blankExpense();
+    add({
+      ...e,
+      category: prefs.defaultCategory || e.category,
+      paymentMethod: prefs.defaultAccount || e.paymentMethod
+    });
+  }, [add, prefs.defaultCategory, prefs.defaultAccount]);
   const onAddIncome = React.useCallback(() => add(blankIncome()), [add]);
   const onPaydays = React.useCallback(() => expenseUi.openPayday(), []);
 
@@ -209,9 +313,78 @@ export default function ExpensesModule() {
             Import
           </Button>
         </Tooltip>
+        <Tooltip title={selected.size ? `Delete ${selected.size} selected — you will see them first` : "Select rows to delete them"}>
+          <span>
+            <IconButton
+              size="small"
+              aria-label="Delete selected transactions"
+              data-axf-expenses-trash={selected.size ? "ready" : "idle"}
+              disabled={!selected.size}
+              onClick={() => commands.run("expenses.expense.delete-selected")}
+              sx={{ color: selected.size ? token("err") : token("dim") }}
+            >
+              <Glyph id="icon-trash" size={16} />
+            </IconButton>
+          </span>
+        </Tooltip>
+        <Tooltip title="Expense Tracker settings">
+          <IconButton size="small" aria-label="Expense Tracker settings" data-axf-expenses-gear onClick={() => expenseUi.openSettings()}>
+            <Glyph id="icon-gear" size={16} />
+          </IconButton>
+        </Tooltip>
         {/* The settings affordance moved to the SHELL (core 0.0.20): the gear
             on ModuleHost and the universal "Module settings" row open the one
             SettingsDialog. */}
+      </Stack>
+
+      {/* ------------------------------------------------------------ filter */}
+      <Stack direction="row" spacing={1} useFlexGap sx={{ alignItems: "center", flexWrap: "wrap" }}>
+        <TextField
+          size="small"
+          placeholder="Filter — merchant, amount, 2026-09, category…"
+          value={ui.filterText}
+          onChange={(e) => expenseUi.setFilterText(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") expenseUi.setFilterText("");
+          }}
+          data-axf-expenses-filter
+          sx={{ width: { xs: "100%", sm: 360 }, "& input": { fontSize: 12.5, py: 0.7 } }}
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Glyph id="icon-search" size={14} />
+                </InputAdornment>
+              ),
+              endAdornment: (
+                <InputAdornment position="end">
+                  {ui.filterText && (
+                    <IconButton size="small" aria-label="Clear filter" onClick={() => expenseUi.setFilterText("")} sx={{ p: 0.3 }}>
+                      <Glyph id="icon-close" size={12} />
+                    </IconButton>
+                  )}
+                  <Tooltip title="Advanced filter — choose the columns it searches">
+                    <IconButton size="small" aria-label="Advanced filter" data-axf-expenses-filter-advanced onClick={() => expenseUi.openFilterDialog()} sx={{ p: 0.3 }}>
+                      <Glyph id="icon-filter" size={14} />
+                    </IconButton>
+                  </Tooltip>
+                </InputAdornment>
+              )
+            }
+          }}
+        />
+        {filtering && (
+          <Chip
+            size="small"
+            variant="outlined"
+            label={`${shown.length} of ${list.length} match`}
+            onDelete={() => expenseUi.setFilterText("")}
+            sx={{ height: 22, ...MONO, color: token("accent") }}
+          />
+        )}
+        {filtering && filterSpec.columns.length > 0 && (
+          <Typography sx={{ fontSize: 11, color: token("dim") }}>in {filterSpec.columns.join(", ")}</Typography>
+        )}
       </Stack>
 
       {/* -------------------------------------------------------- tab group */}
@@ -244,7 +417,7 @@ export default function ExpensesModule() {
 
       {ready && active && (
         <Box sx={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
-          <TabContent tab={active} expenses={list} onUpdate={update} onAdd={onAdd} onAddIncome={onAddIncome} onPaydays={onPaydays} />
+          <TabContent tab={active} expenses={shown} onUpdate={update} onAdd={onAdd} onAddIncome={onAddIncome} onPaydays={onPaydays} />
         </Box>
       )}
 
@@ -269,6 +442,23 @@ export default function ExpensesModule() {
       <PaydayDialog open={ui.payday} expenses={list} onClose={() => expenseUi.closePayday()} />
 
       <ImportDialog open={ui.importing} expenses={list} onClose={() => expenseUi.closeImport()} />
+
+      <DeleteSelectedDialog open={ui.deleting} expenses={list} onClose={() => expenseUi.closeDeleteSelected()} />
+
+      <FilterDialog open={ui.filterDialog} onClose={() => expenseUi.closeFilterDialog()} />
+
+      <ExpensesSettingsDialog open={ui.settings} onClose={() => expenseUi.closeSettings()} />
+
+      <WelcomeDialog
+        open={ui.welcome}
+        expenses={list}
+        user={welcomeUser}
+        onClose={() => expenseUi.closeWelcome()}
+        onOpenPaydays={() => {
+          expenseUi.closeWelcome();
+          expenseUi.openPayday();
+        }}
+      />
 
       <VaultDialog
         open={ui.dialog !== null}

@@ -85,6 +85,16 @@ export function newReportTab(): string {
  * one thing. Returns how many were added — zero when the schedule is not set
  * up, which the dialog explains rather than this function.
  */
+/** The delete itself, shared by the Del key / menu row (confirmation off) and
+ *  the confirmation dialog. Prunes the selection BEFORE reporting, so it never
+ *  keeps claiming rows that no longer exist. */
+export function deleteExpenses(ids: readonly string[]): number {
+  const gone = expenseStore.removeMany(ids);
+  expenseSelection.prune(expenseStore.getState().list.map((e) => e.id));
+  expenseUi.say(`Deleted ${gone} transaction${gone === 1 ? "" : "s"}`);
+  return gone;
+}
+
 export function fillPaydays(until = todayIso()): number {
   const schedule = paySchedule();
   const list = expenseStore.getState().list;
@@ -272,23 +282,27 @@ export function registerExpensesCommands(): void {
       run: () => {
         const ids = expenseSelection.ids();
         if (!ids.length) return;
-        if (getExpensesSettings().confirmDelete) {
-          const total = ids.reduce((n, id) => {
-            const e = expenseStore.get(id);
-            return n + (e ? effectiveTotal(e) : 0);
-          }, 0);
-          const ok = window.confirm(
-            `Delete ${ids.length} selected expense${ids.length === 1 ? "" : "s"} (${money(total)})? There is no undo.`
-          );
-          if (!ok) return;
-        }
-        const gone = expenseStore.removeMany(ids);
-        // Prune BEFORE reporting: the selection must not keep claiming rows
-        // that no longer exist, or the next Del press deletes nothing while
-        // saying it deleted three.
-        expenseSelection.prune(expenseStore.getState().list.map((e) => e.id));
-        expenseUi.say(`Deleted ${gone} expense${gone === 1 ? "" : "s"}`);
+        // With confirmation on, the dialog SHOWS the rows before deleting
+        // (DeleteSelectedDialog); off, the delete is immediate.
+        if (getExpensesSettings().confirmDelete) expenseUi.openDeleteSelected();
+        else deleteExpenses(ids);
       }
+    });
+  }
+
+  if (!commands.has("expenses.settings.open")) {
+    commands.register({
+      id: "expenses.settings.open",
+      title: "Open the Expense Tracker settings",
+      run: () => expenseUi.openSettings()
+    });
+  }
+
+  if (!commands.has("expenses.filter.advanced")) {
+    commands.register({
+      id: "expenses.filter.advanced",
+      title: "Open the advanced filter — choose which columns the filter searches",
+      run: () => expenseUi.openFilterDialog()
     });
   }
 

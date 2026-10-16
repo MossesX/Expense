@@ -30,11 +30,27 @@ export interface ExpensesUiState {
    *  is not a vault mode and must not be typed as one. */
   readonly payday: boolean;
   readonly importing: boolean;
+  readonly settings: boolean;
+  readonly deleting: boolean;
+  readonly filterDialog: boolean;
+  readonly welcome: boolean;
+  /** The header filter's text — session state, not a setting. */
+  readonly filterText: string;
   /** A transient line the screen shows and then forgets. */
   readonly toast: string | null;
 }
 
-const INITIAL: ExpensesUiState = { dialog: null, payday: false, importing: false, toast: null };
+const INITIAL: ExpensesUiState = {
+  dialog: null,
+  payday: false,
+  importing: false,
+  settings: false,
+  deleting: false,
+  filterDialog: false,
+  welcome: false,
+  filterText: "",
+  toast: null
+};
 
 class UiStore {
   #state: ExpensesUiState = INITIAL;
@@ -81,6 +97,43 @@ class UiStore {
   closeImport(): void {
     if (!this.#state.importing) return;
     this.#set({ importing: false });
+  }
+
+  /** One opener/closer per boolean flag, so a command can name the dialog. */
+  openSettings(): void {
+    if (!this.#state.settings) this.#set({ settings: true });
+  }
+
+  closeSettings(): void {
+    if (this.#state.settings) this.#set({ settings: false });
+  }
+
+  openDeleteSelected(): void {
+    if (!this.#state.deleting) this.#set({ deleting: true });
+  }
+
+  closeDeleteSelected(): void {
+    if (this.#state.deleting) this.#set({ deleting: false });
+  }
+
+  openFilterDialog(): void {
+    if (!this.#state.filterDialog) this.#set({ filterDialog: true });
+  }
+
+  closeFilterDialog(): void {
+    if (this.#state.filterDialog) this.#set({ filterDialog: false });
+  }
+
+  openWelcome(): void {
+    if (!this.#state.welcome) this.#set({ welcome: true });
+  }
+
+  closeWelcome(): void {
+    if (this.#state.welcome) this.#set({ welcome: false });
+  }
+
+  setFilterText(text: string): void {
+    if (this.#state.filterText !== text) this.#set({ filterText: text });
   }
 
   say(message: string): void {

@@ -1,72 +1,179 @@
-/**
- * @file The Expense Tracker's settings — a typed ADAPTER over the core store.
- *
- * The values, their reasons, and the considered-and-refused list moved to
- * `expenses.decl.ts` (`settings:` field — core 0.0.20, settings as data on
- * the module contract). This file keeps the module's typed API so
- * `expenses.commands.ts` reads `ExpensesSettings.confirmDelete` rather than a
- * bare record. Persistence moved from localStorage to the kv transport; the
- * surface is the shell's one `SettingsDialog` (`ExpensesSui.tsx` deleted).
- * The minimal-sui ceiling stands.
- */
 "use client";
 
+/**
+ * @file The Expense Tracker's settings — typed access over core's module
+ * settings store, and the one place the keys are grouped into the sections the
+ * rebuilt settings dialog shows.
+ *
+ * The ROWS (labels, hints, kinds, defaults) live on the decl
+ * (`expenses.decl.ts` → `settings`), as core 0.0.20 requires: the decl is data
+ * plain Node can import, the registry validates it, and the kv namespace
+ * `expenses-settings` persists it per user. This file adds what the decl
+ * cannot say: the TypeScript shape, the pay schedule derived from four of the
+ * rows, and `SECTIONS`, which the dialog walks so a new row only has to be
+ * added in two places (the decl and a section) to appear.
+ *
+ * Reviewed after the peel (2026-10-16): every row below is read by something in
+ * this tree — the default account and category by "Add expense", the start
+ * view by the tab strip, the import tolerances by the duplicate checks, the
+ * welcome switches by the welcome dialog, the payday rows by the calendar. A
+ * setting nothing reads is a lie in a form, so none is declared speculatively.
+ */
 import { getModuleSettings, settings as settingsRegistry, useModuleSettings } from "@axf/core";
 
 import { PAY_FREQUENCIES, type PayFrequency, type PaySchedule } from "./payday";
 
 export interface ExpensesSettings {
-  /** Ask before deleting an expense (grid row, tree leaf, or menu row). */
+  // General
   confirmDelete: boolean;
-  /** Take-home pay per payday, in DOLLARS — a settings value is a scalar the
-   *  shell's dialog edits directly, and nobody types cents into a dial. */
+  defaultAccount: string;
+  defaultCategory: string;
+  startView: string;
+  toastSeconds: number;
+  // Grid & filter
+  showHints: boolean;
+  denseRows: boolean;
+  defaultSort: string;
+  defaultSortDir: string;
+  filterColumns: string;
+  filterMatchAll: boolean;
+  statementPeriod: string;
+  // Paydays
   paydayAmount: number;
-  /** `PayFrequency` — kept as a string here because a settings value is scalar. */
   paydayEvery: string;
-  /** ISO date of the first payday; empty until the schedule is set up. */
+  paydayWeekday: string;
+  paydayDayOfMonth: number;
   paydayAnchor: string;
-  /** The Merchant column for a generated payday. */
+  paydaySince: string;
   paydayPayer: string;
+  // Welcome
+  welcomeEnabled: boolean;
+  welcomeMissingPaydays: boolean;
+  welcomeMonthSummary: boolean;
+  welcomeNextPayday: boolean;
+  welcomeOverBudget: boolean;
+  welcomeTopCategories: boolean;
+  welcomeUnreconciled: boolean;
+  welcomeDisputed: boolean;
+  welcomeRecentImports: boolean;
+  // Import
+  importAccount: string;
+  importSkipPayments: boolean;
+  importDateSlack: number;
+  importAmountSlack: number;
 }
 
 export const DEFAULT_SETTINGS: ExpensesSettings = {
   confirmDelete: true,
+  defaultAccount: "",
+  defaultCategory: "other",
+  startView: "remember",
+  toastSeconds: 4,
+  showHints: true,
+  denseRows: false,
+  defaultSort: "date",
+  defaultSortDir: "desc",
+  filterColumns: "",
+  filterMatchAll: true,
+  statementPeriod: "month",
   paydayAmount: 0,
   paydayEvery: "biweekly",
+  paydayWeekday: "5",
+  paydayDayOfMonth: 1,
   paydayAnchor: "",
-  paydayPayer: "Payday"
+  paydaySince: "",
+  paydayPayer: "Payday",
+  welcomeEnabled: true,
+  welcomeMissingPaydays: true,
+  welcomeMonthSummary: true,
+  welcomeNextPayday: true,
+  welcomeOverBudget: true,
+  welcomeTopCategories: false,
+  welcomeUnreconciled: false,
+  welcomeDisputed: false,
+  welcomeRecentImports: false,
+  importAccount: "Capital One",
+  importSkipPayments: true,
+  importDateSlack: 4,
+  importAmountSlack: 1
 };
+
+export type SettingKey = keyof ExpensesSettings;
+
+/** The dialog's sections, in order. Every declared key appears in exactly one. */
+export const SECTIONS: readonly { id: string; title: string; blurb: string; keys: readonly SettingKey[] }[] = [
+  {
+    id: "general",
+    title: "General",
+    blurb: "What a new entry starts as, which view opens, how long a toast stays.",
+    keys: ["confirmDelete", "defaultAccount", "defaultCategory", "startView", "toastSeconds"]
+  },
+  {
+    id: "grid",
+    title: "Grid & filter",
+    blurb: "The grid's defaults, and how the filter field reads what you type.",
+    keys: ["showHints", "denseRows", "defaultSort", "defaultSortDir", "filterMatchAll", "filterColumns", "statementPeriod"]
+  },
+  {
+    id: "paydays",
+    title: "Paydays",
+    blurb: "The pay schedule. The Paydays dialog edits the same rows with a calendar beside them.",
+    keys: ["paydayAmount", "paydayEvery", "paydayWeekday", "paydayDayOfMonth", "paydayAnchor", "paydaySince", "paydayPayer"]
+  },
+  {
+    id: "welcome",
+    title: "Welcome",
+    blurb: "What the welcome dialog shows when you sign in.",
+    keys: [
+      "welcomeEnabled",
+      "welcomeMissingPaydays",
+      "welcomeMonthSummary",
+      "welcomeNextPayday",
+      "welcomeOverBudget",
+      "welcomeTopCategories",
+      "welcomeUnreconciled",
+      "welcomeDisputed",
+      "welcomeRecentImports"
+    ]
+  },
+  {
+    id: "import",
+    title: "Import",
+    blurb: "Defaults for importing bank transactions and how loosely duplicates are matched.",
+    keys: ["importAccount", "importSkipPayments", "importDateSlack", "importAmountSlack"]
+  }
+];
 
 const OWNER = "expenses";
 
-/** Read the settings outside React — what the command handlers use. */
 export function getExpensesSettings(): ExpensesSettings {
-  return { ...DEFAULT_SETTINGS, ...getModuleSettings(OWNER) };
+  return { ...DEFAULT_SETTINGS, ...getModuleSettings(OWNER) } as ExpensesSettings;
 }
 
-/** The four payday rows as one typed schedule, cents and all. */
 export function paySchedule(v: ExpensesSettings = getExpensesSettings()): PaySchedule {
   const every = PAY_FREQUENCIES.some((f) => f.value === v.paydayEvery)
     ? (v.paydayEvery as PayFrequency)
     : "biweekly";
+  const weekday = Number(v.paydayWeekday);
   return {
     amount: Math.max(0, Math.round((Number(v.paydayAmount) || 0) * 100)),
     every,
+    weekday: Number.isInteger(weekday) && weekday >= 0 && weekday <= 6 ? weekday : 5,
     anchor: String(v.paydayAnchor ?? "").trim(),
+    dayOfMonth: Math.min(31, Math.max(1, Math.round(Number(v.paydayDayOfMonth) || 1))),
+    since: String(v.paydaySince ?? "").trim(),
     payer: String(v.paydayPayer ?? "").trim() || "Payday"
   };
 }
 
-/** Live settings inside a component; safe under SSR (server sees defaults). */
 export function useExpensesSettings(): ExpensesSettings {
   const values = useModuleSettings(OWNER);
-  return { ...DEFAULT_SETTINGS, ...values };
+  return { ...DEFAULT_SETTINGS, ...values } as ExpensesSettings;
 }
 
-/** The write half, shaped like the store it replaced. */
 export const expensesSettings = {
   getState: getExpensesSettings,
-  set<K extends keyof ExpensesSettings>(key: K, value: ExpensesSettings[K]): void {
+  set<K extends SettingKey>(key: K, value: ExpensesSettings[K]): void {
     settingsRegistry.get(OWNER)?.set(key, value);
   },
   reset(): void {

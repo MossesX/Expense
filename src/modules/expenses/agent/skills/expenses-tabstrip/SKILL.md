@@ -1,6 +1,6 @@
 ---
 name: Expense Tracker tab group
-description: The operations available on expense tracker tab group in Expense Tracker: New report, Open report…, Save ledger…, Load ledger…, Import transactions…, Reopen the standard views. Use when the user asks how to do one of these.
+description: The operations available on expense tracker tab group in Expense Tracker: New report, Open report…, Save ledger…, Load ledger…, Import transactions…, Advanced filter…, Settings…, Reopen the standard views. Use when the user asks how to do one of these.
 ---
 # Expense Tracker tab group
 
@@ -18,6 +18,8 @@ inside a surface offers both.
 | Open report… | `expenses.report.open` | — |
 | Save ledger… | `expenses.ledger.save` | — |
 | Load ledger… | `expenses.ledger.load` | — |
+| Advanced filter… | `expenses.filter.advanced` | The header filter field's text plus switches for which columns it searches. |
+| Settings… | `expenses.settings.open` | The tabbed settings dialog — General, Grid & filter, Paydays, Welcome, Import, Theme. |
 | Import transactions… | `expenses.ledger.import` | Paste a bank list or choose a CSV export; duplicates against the ledger are detected several ways and left unticked. |
 | Reopen the standard views | `expenses.tabs.restore` | — |
 
