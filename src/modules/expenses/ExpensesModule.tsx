@@ -330,7 +330,7 @@ export default function ExpensesModule() {
         </Tooltip>
         <Tooltip title="Read transactions from a photo or screenshot of a statement — duplicates are shown side by side before anything is written.">
           <Button size="small" variant="outlined" onClick={() => expenseUi.openScan()} startIcon={<Glyph id="icon-image" size={14} />}>
-            Scan image
+            Scan images
           </Button>
         </Tooltip>
         <Tooltip title={selected.size ? `Delete ${selected.size} selected — you will see them first` : "Select rows to delete them"}>

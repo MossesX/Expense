@@ -1,6 +1,6 @@
 ---
 name: Expense Tracker tab group
-description: The operations available on expense tracker tab group in Expense Tracker: New report, Open report…, Save ledger…, Load ledger…, Import transactions…, Scan statement image…, Ask the assistant…, Advanced filter…, Settings…, Reopen the standard views. Use when the user asks how to do one of these.
+description: The operations available on expense tracker tab group in Expense Tracker: New report, Open report…, Save ledger…, Load ledger…, Import transactions…, Scan statement images…, Ask the assistant…, Advanced filter…, Settings…, Reopen the standard views. Use when the user asks how to do one of these.
 ---
 # Expense Tracker tab group
 
@@ -18,7 +18,7 @@ inside a surface offers both.
 | Open report… | `expenses.report.open` | — |
 | Save ledger… | `expenses.ledger.save` | — |
 | Load ledger… | `expenses.ledger.load` | — |
-| Scan statement image… | `expenses.ledger.scan-image` | Pick the account, choose a photo or screenshot; Claude reads the lines and duplicates are shown as pairs with a keep-both switch. |
+| Scan statement images… | `expenses.ledger.scan-image` | Pick the account, choose one or more photos or screenshots (up to 12); Claude reads each, the lines are joined, and duplicates — against the ledger or between overlapping images — are shown as pairs with a keep-both switch. |
 | Ask the assistant… | `expenses.assistant.ask` | Opens the assistant drawer with the current selection as context. Chat reads the source; Edit source and Build modes change a workspace copy. |
 | Advanced filter… | `expenses.filter.advanced` | The header filter field's text plus switches for which columns it searches. |
 | Settings… | `expenses.settings.open` | The tabbed settings dialog — General, Grid & filter, Paydays, Welcome, Import, Theme. |
