@@ -167,7 +167,7 @@ export function runCliOnce(opts: { token: string; model?: string; prompt: string
       }
       const result = String(parsed?.result ?? "").trim();
       if (code === 0 && parsed && !parsed.is_error) resolve({ ok: true, text: result, detail: `Claude Code answered: ${result.slice(0, 80) || "ok"}` });
-      else resolve({ ok: false, text: "", detail: (result || err.trim().split("\n").slice(-2).join(" ") || `exit code ${code}`).slice(0, 300) });
+      else resolve({ ok: false, text: "", detail: `${result || err.trim().split("\n").filter(Boolean).slice(-4).join(" ") || "no output"} (exit ${code})`.slice(0, 400) });
     });
   });
 }
