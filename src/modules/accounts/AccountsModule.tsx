@@ -43,6 +43,7 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import ButtonBase from "@mui/material/ButtonBase";
 import CircularProgress from "@mui/material/CircularProgress";
+import Divider from "@mui/material/Divider";
 import Stack from "@mui/material/Stack";
 import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
@@ -178,6 +179,44 @@ function RailLabel({
   );
 }
 
+/**
+ * A rail row that LEAVES the screen — the ledger lives on its own route, and
+ * the accounts rail is otherwise a dead end for someone who came here from it
+ * (owner, 2026-10-16: *"I can't see the expense ledger, add hook to left
+ * rail"*). Drawn to the tabs' own metrics so it reads as one list, but not a
+ * `Tab`: a tab names a surface of THIS screen, and `Tabs` would try to select
+ * it rather than navigate.
+ */
+function RailLink({
+  glyph,
+  text,
+  href,
+  collapsed
+}: {
+  glyph: string;
+  text: string;
+  href: string;
+  collapsed: boolean;
+}) {
+  return (
+    <ButtonBase
+      component="a"
+      href={href}
+      data-axf-accounts-rail-link={href}
+      sx={{
+        minHeight: 40,
+        px: collapsed ? 0 : "14px",
+        justifyContent: collapsed ? "center" : "flex-start",
+        color: token("ink"),
+        opacity: 0.85,
+        "&:hover": { opacity: 1, background: `color-mix(in srgb, ${token("accent")} 10%, transparent)` }
+      }}
+    >
+      <RailLabel glyph={glyph} text={text} collapsed={collapsed} />
+    </ButtonBase>
+  );
+}
+
 const SURFACES: readonly Surface[] = ["members", "messages", "profile", "state", "admin"];
 
 /**
@@ -288,6 +327,9 @@ export default function AccountsModule() {
             </Box>
           </Stack>
         )}
+
+        <RailLink glyph="icon-book" text="Expense ledger" href="/expenses" collapsed={collapsed} />
+        <Divider sx={{ borderColor: token("edge"), mx: collapsed ? 1 : 1.5, my: 0.5 }} />
 
         <Tabs
           orientation="vertical"
