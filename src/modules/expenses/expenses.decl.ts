@@ -138,7 +138,7 @@ export const EXPENSES_DECL: ModuleDecl = {
         { id: "save-ledger", label: "Save ledger…", command: "expenses.ledger.save", order: 40 },
         { id: "load-ledger", label: "Load ledger…", command: "expenses.ledger.load", order: 50 },
         { id: "import-ledger", label: "Import transactions…", command: "expenses.ledger.import", order: 55 },
-        { id: "scan-image", label: "Scan statement image…", command: "expenses.ledger.scan-image", order: 56 },
+        { id: "scan-image", label: "Scan statement images…", command: "expenses.ledger.scan-image", order: 56 },
         { id: "sep-filter", label: "", role: "separator", order: 57 },
         { id: "advanced-filter", label: "Advanced filter…", command: "expenses.filter.advanced", order: 58 },
         { id: "sep-2", label: "", role: "separator", order: 60 },

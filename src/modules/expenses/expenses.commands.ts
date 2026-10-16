@@ -294,7 +294,7 @@ export function registerExpensesCommands(): void {
   if (!commands.has("expenses.ledger.scan-image")) {
     commands.register({
       id: "expenses.ledger.scan-image",
-      title: "Read transactions from a statement image, skipping duplicates",
+      title: "Read transactions from statement images, skipping duplicates",
       run: () => expenseUi.openScan()
     });
   }
