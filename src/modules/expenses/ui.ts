@@ -29,11 +29,12 @@ export interface ExpensesUiState {
   /** The Paydays dialog (schedule + fill). Separate from `dialog` because it
    *  is not a vault mode and must not be typed as one. */
   readonly payday: boolean;
+  readonly importing: boolean;
   /** A transient line the screen shows and then forgets. */
   readonly toast: string | null;
 }
 
-const INITIAL: ExpensesUiState = { dialog: null, payday: false, toast: null };
+const INITIAL: ExpensesUiState = { dialog: null, payday: false, importing: false, toast: null };
 
 class UiStore {
   #state: ExpensesUiState = INITIAL;
@@ -72,6 +73,16 @@ class UiStore {
   }
 
   /** Say something happened. The screen clears it on a timer. */
+  openImport(): void {
+    if (this.#state.importing) return;
+    this.#set({ importing: true });
+  }
+
+  closeImport(): void {
+    if (!this.#state.importing) return;
+    this.#set({ importing: false });
+  }
+
   say(message: string): void {
     this.#set({ toast: message });
   }

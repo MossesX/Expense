@@ -62,6 +62,7 @@ import { Glyph, commands, token } from "@axf/core";
 import { MONO } from "./bits";
 import EmptyTabState from "./EmptyTabState";
 import ExpenseWindows from "./ExpenseWindows";
+import ImportDialog from "./ImportDialog";
 import PaydayDialog from "./PaydayDialog";
 import TabContent from "./TabContent";
 import TabGroup from "./TabGroup";
@@ -203,6 +204,11 @@ export default function ExpensesModule() {
             Load
           </Button>
         </Tooltip>
+        <Tooltip title="Add transactions from a bank export or a pasted list — duplicates are detected and skipped.">
+          <Button size="small" variant="outlined" onClick={() => expenseUi.openImport()}>
+            Import
+          </Button>
+        </Tooltip>
         {/* The settings affordance moved to the SHELL (core 0.0.20): the gear
             on ModuleHost and the universal "Module settings" row open the one
             SettingsDialog. */}
@@ -261,6 +267,8 @@ export default function ExpensesModule() {
       <ExpenseWindows tabs={floating} expenses={list} onUpdate={update} onAdd={onAdd} />
 
       <PaydayDialog open={ui.payday} expenses={list} onClose={() => expenseUi.closePayday()} />
+
+      <ImportDialog open={ui.importing} expenses={list} onClose={() => expenseUi.closeImport()} />
 
       <VaultDialog
         open={ui.dialog !== null}

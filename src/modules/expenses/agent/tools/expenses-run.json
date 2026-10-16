@@ -6,7 +6,7 @@
     "properties": {
       "command": {
         "type": "string",
-        "description": "expenses.expense.reconcile-accept — Accept printed total (adjust tax); expenses.expense.trust-lines — Trust the lines (clear printed total); expenses.expense.toggle-reimbursable — Mark / unmark reimbursable; expenses.expense.toggle-disputed — Not my charge (toggle); expenses.expense.copy-line — Copy as a line; expenses.expense.delete — Delete expense (destructive); expenses.expense.delete-selected — Delete selected expenses (destructive); expenses.node.copy-subtotal — Copy this subtotal; expenses.add — Add expense; expenses.tab.float — Float as a window; expenses.tab.dock — Dock back into the strip; expenses.tab.close — Close tab (destructive); expenses.tab.close-others — Close other tabs; expenses.report.new — New report; expenses.report.open — Open report…; expenses.ledger.save — Save ledger…; expenses.ledger.load — Load ledger…; expenses.tabs.restore — Reopen the standard views",
+        "description": "expenses.expense.reconcile-accept — Accept printed total (adjust tax); expenses.expense.trust-lines — Trust the lines (clear printed total); expenses.expense.toggle-reimbursable — Mark / unmark reimbursable; expenses.expense.toggle-disputed — Not my charge (toggle); expenses.expense.copy-line — Copy as a line; expenses.expense.delete — Delete expense (destructive); expenses.expense.delete-selected — Delete selected expenses (destructive); expenses.node.copy-subtotal — Copy this subtotal; expenses.add — Add expense; expenses.tab.float — Float as a window; expenses.tab.dock — Dock back into the strip; expenses.tab.close — Close tab (destructive); expenses.tab.close-others — Close other tabs; expenses.report.new — New report; expenses.report.open — Open report…; expenses.ledger.save — Save ledger…; expenses.ledger.load — Load ledger…; expenses.ledger.import — Import transactions…; expenses.tabs.restore — Reopen the standard views",
         "enum": [
           "expenses.expense.reconcile-accept",
           "expenses.expense.trust-lines",
@@ -25,6 +25,7 @@
           "expenses.report.open",
           "expenses.ledger.save",
           "expenses.ledger.load",
+          "expenses.ledger.import",
           "expenses.tabs.restore"
         ]
       },

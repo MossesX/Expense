@@ -372,6 +372,14 @@ export function registerExpensesCommands(): void {
     });
   }
 
+  if (!commands.has("expenses.ledger.import")) {
+    commands.register({
+      id: "expenses.ledger.import",
+      title: "Import transactions from a bank export or a pasted list, skipping duplicates",
+      run: () => expenseUi.openImport()
+    });
+  }
+
   if (!commands.has("expenses.ledger.load")) {
     commands.register({
       id: "expenses.ledger.load",
