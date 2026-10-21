@@ -316,6 +316,13 @@ export function registerExpensesCommands(): void {
       });
     }
   }
+  if (!commands.has("expenses.view.columns")) {
+    commands.register({
+      id: "expenses.view.columns",
+      title: "Choose which grid columns are shown",
+      run: () => expenseUi.openColumns()
+    });
+  }
   if (!commands.has("expenses.col.show-all")) {
     commands.register({
       id: "expenses.col.show-all",

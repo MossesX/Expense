@@ -1,7 +1,7 @@
 /**
- * @file The grid's hideable columns — one list the grid, the header's View
- * menu and the context menu's View submenu all read (owner, 2026-10-16:
- * *"Make columns hideable from view menu with submenu in context menu"*).
+ * @file The grid's hideable columns — one list the grid, the Columns dialog
+ * (header View button and the context menu's View…) and the toggle commands
+ * all read (owner, 2026-10-16, dialog 2026-10-21).
  *
  * The hidden set is a SETTING (`hiddenColumns`, comma-separated ids) rather
  * than component state, so it survives a reload and a floated grid agrees

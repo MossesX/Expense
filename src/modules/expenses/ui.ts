@@ -33,6 +33,8 @@ export interface ExpensesUiState {
   readonly scanning: boolean;
   /** The Actions › Dupe dialog — possible duplicates inside the ledger. */
   readonly dupes: boolean;
+  /** View › Columns — tick which grid columns are shown. */
+  readonly columns: boolean;
   readonly settings: boolean;
   readonly deleting: boolean;
   readonly filterDialog: boolean;
@@ -49,6 +51,7 @@ const INITIAL: ExpensesUiState = {
   importing: false,
   scanning: false,
   dupes: false,
+  columns: false,
   settings: false,
   deleting: false,
   filterDialog: false,
@@ -119,6 +122,14 @@ class UiStore {
 
   closeDupes(): void {
     if (this.#state.dupes) this.#set({ dupes: false });
+  }
+
+  openColumns(): void {
+    if (!this.#state.columns) this.#set({ columns: true });
+  }
+
+  closeColumns(): void {
+    if (this.#state.columns) this.#set({ columns: false });
   }
 
   openSettings(): void {

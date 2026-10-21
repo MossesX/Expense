@@ -454,10 +454,23 @@ export function GridView({
       </Box>
 
       <Paper variant="outlined" sx={{ overflow: "auto" }}>
-        <Table size="small" sx={{ minWidth: 1260 }}>
+        {/* Columns as tight as their content plus a little padding (owner,
+            2026-10-21: "make column widths tight as possible to only have a
+            little padding"): the table sizes to its content rather than
+            stretching to the panel, cells never wrap, and the horizontal
+            padding drops from MUI's 16px to 6px. Notes is the one column
+            capped, so a long note cannot widen the whole grid. */}
+        <Table
+          size="small"
+          sx={{
+            width: "auto",
+            "& th, & td": { px: 0.75, whiteSpace: "nowrap" },
+            "& th.MuiTableCell-paddingCheckbox, & td.MuiTableCell-paddingCheckbox": { px: 0.25 }
+          }}
+        >
           <TableHead>
             <TableRow sx={{ "& th": { borderColor: token("edge"), background: token("panel2") } }}>
-              <TableCell padding="checkbox" sx={{ width: 34, py: 0.4 }}>
+              <TableCell padding="checkbox" sx={{ py: 0.4 }}>
                 <Tooltip title={selectedHere === order.length && order.length ? "Deselect all" : "Select all"}>
                   <Checkbox
                     size="small"
@@ -473,7 +486,7 @@ export function GridView({
                   />
                 </Tooltip>
               </TableCell>
-              <TableCell sx={{ width: 30, py: 0.4 }} />
+              <TableCell sx={{ py: 0.4 }} />
               {header("date", "Date")}
               {col("kind") && header("kind", "Kind", "Expense (money out) or income (money in). Click a chip to flip it.")}
               {header("merchant", "Merchant")}
@@ -567,7 +580,7 @@ export function GridView({
                         variant="standard"
                         value={r.category}
                         onChange={(e) => onUpdate(r.id, { category: e.target.value })}
-                        sx={{ width: 150, "& .MuiInputBase-input": { fontSize: 11.8, py: 0.2 } }}
+                        sx={{ "& .MuiInputBase-input": { fontSize: 11.8, py: 0.2 } }}
                       >
                         {CATEGORIES.map((c) => (
                           <MenuItem key={c.id} value={c.id} sx={{ fontSize: 12 }}>
@@ -628,7 +641,9 @@ export function GridView({
                       <SourceChip source={r.source} />
                     </TableCell>}
                     {col("notes") && <TableCell sx={cell}>
-                      <TextCell value={r.note ?? ""} onCommit={(v) => onUpdate(r.id, { note: v || undefined })} width={210} />
+                      <Box sx={{ maxWidth: 320 }}>
+                        <TextCell value={r.note ?? ""} onCommit={(v) => onUpdate(r.id, { note: v || undefined })} width={210} />
+                      </Box>
                     </TableCell>}
                   </TableRow>
                   {open && (
