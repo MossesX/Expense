@@ -13,7 +13,7 @@ It started as the `expenses` module "peeled" out of MossesX/studioX, with the Am
   delete grid, filter, weekday paydays, welcome and settings dialogs; payday frequency switch;
   AI assistant + Claude connection settings + statement-image import (several images at once);
   hideable grid columns (View menu) and an Actions > Dupe duplicate finder.
-- **Oct 21 2026 (branch `claude/yo-a7qg14`, not yet merged):** grid columns are now as tight as their
+- **Oct 21 2026 (PR #10, merged):** grid columns are now as tight as their
   content (table no longer stretches, 6px cell padding, Notes capped at 320px). View in the context
   menu and the header View button open a Columns dialog with a checkbox per column; ticking it
   shows or hides the column immediately.
