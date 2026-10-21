@@ -19,9 +19,8 @@ export interface GridColumn {
 }
 
 /**
- * The grid's hideable columns — data here, on the decl, because the context
- * menu's View submenu below is generated from the list and the decl must stay
- * importable by plain Node. `columns.ts` adds the behaviour (the hidden set
+ * The grid's hideable columns — data here, on the decl, which must stay
+ * importable by plain Node; the Columns dialog and toggle commands read it. `columns.ts` adds the behaviour (the hidden set
  * is the `hiddenColumns` setting). Date and Merchant are deliberately absent:
  * a row with neither is not a transaction anyone can recognise.
  */
@@ -146,31 +145,12 @@ export const EXPENSES_DECL: ModuleDecl = {
         { id: "add-income", label: "Add income", command: "expenses.income.add", order: 20 },
         { id: "paydays", label: "Paydays…", command: "expenses.payday.open", order: 30 },
         { id: "sep-view", label: "", role: "separator", order: 40 },
-        // View › one toggle per hideable grid column, drawn with the
-        // shown/hidden marks; Actions › the ledger-wide operations (owner,
-        // 2026-10-16: "columns hideable from view menu with submenu in
-        // context menu … context menu entry called actions with submenu
-        // Dupe"). The column rows are generated from `columns.ts` so the
-        // menu and the grid can never list different columns.
-        {
-          id: "view",
-          label: "View",
-          role: "submenu",
-          order: 41,
-          items: [
-            ...GRID_COLUMNS.map((c, i) => ({
-              id: `col-${c.id}`,
-              label: c.label,
-              role: "toggle" as const,
-              command: `expenses.col.toggle-${c.id}`,
-              checkedWhen: `expenses.col.${c.id}`,
-              marks: "visibility" as const,
-              order: 10 + i
-            })),
-            { id: "sep-all", label: "", role: "separator", order: 90 },
-            { id: "show-all", label: "Show all columns", command: "expenses.col.show-all", order: 91 }
-          ]
-        },
+        // View opens the Columns dialog — every column with a checkbox that
+        // shows / hides it the moment it changes (owner, 2026-10-21, which
+        // replaced the 2026-10-16 View submenu of toggles). Actions › the
+        // ledger-wide operations (owner, 2026-10-16: "context menu entry
+        // called actions with submenu Dupe").
+        { id: "view", label: "View…", command: "expenses.view.columns", order: 41 },
         {
           id: "actions",
           label: "Actions",
